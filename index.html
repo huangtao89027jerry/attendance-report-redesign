@@ -232,34 +232,45 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
 .group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
 .cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
-/* 展开的那条父行铺浅蓝底 → 和其它未展开的父行区分开 */
-tr.expanded>td{background:#F1F6FF;border-bottom:0}
+
+/* ---- 展开：一整块浅色区，细则用缩进 + 引导线从属，不用第二张表 ---- */
+tr.expanded>td{background:#F6F9FE;border-bottom:0}
+tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .expanded-cell{
-  padding:0!important;background:#F1F6FF;
+  padding:0!important;background:#F6F9FE;
   border-bottom:1px solid var(--xx-border)!important;
 }
-/* 细则做成嵌在浅蓝条里的白卡：圆角 + 四周留白 → 区块感 */
-.expanded-inner{padding:2px 10px 10px;text-align:left}
-.nested{background:var(--surface);border-radius:10px;overflow:hidden;padding-top:6px}
-tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
-/* 展开区沿用外层表格的列宽，数字才能和上面的列对齐 */
-.stats-grid{font-size:12px}
-.stats-grid>div{display:grid;grid-template-columns:1fr 54px 54px 62px}
-.stats-grid .sg-head>span{font-size:11px;color:var(--xx-muted);padding:0 6px 4px;text-align:right}
-.stats-grid .sg-row>span{
-  display:flex;align-items:center;justify-content:flex-end;
-  padding:8px 6px;border-top:1px solid #EEF1F5;
+.expanded-inner{position:relative;padding:4px 14px 4px 30px;text-align:left}
+.expanded-inner::before{
+  content:"";position:absolute;left:15px;top:2px;bottom:14px;width:2px;
+  border-radius:1px;background:#CBDDF8;
 }
-.stats-grid .sg-row>span:first-child{justify-content:flex-start;color:#4E5C6E}
-.stats-grid>div>span:first-child{padding-left:14px}
-.stats-grid .sg-row.foot>span{border-top:1px solid var(--xx-border)}
-.stats-grid .sg-row.foot>span:first-child{color:var(--xx-text)}
+
+/* 细则面板：两个大数字打头，下面是对账式明细，全程不用表格线 */
+.dp-rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 0 14px}
+.dp-rates span{display:block;font-size:11px;color:var(--xx-muted);line-height:1.5}
+.dp-rates b{
+  display:block;font-size:26px;font-weight:600;line-height:1.2;
+  color:var(--xx-primary);letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+}
+.dp-rates b i{font-style:normal;font-size:13px;margin-left:1px}
+.dp-rates b.empty-rate{color:var(--xx-muted);font-size:20px}
+.dp-rows{display:grid}
+.dp-rows .r{
+  display:grid;grid-template-columns:1fr auto;align-items:center;
+  padding:8px 0;font-size:13px;
+}
+.dp-rows .r+.r{border-top:1px solid #E8EEF8}
+.dp-rows .r>span{color:#4E5C6E}
+.dp-rows .r>em{font-style:normal;color:var(--xx-muted);font-variant-numeric:tabular-nums}
+.dp-rows .r>em b{font-weight:600;color:var(--xx-text);margin-right:3px}
+
 .expanded-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:6px 14px 10px;border-top:1px solid var(--xx-border);
+  padding:10px 0 12px;margin-top:4px;border-top:1px solid #E8EEF8;
 }
 .stats-note{font-size:11px;color:var(--xx-muted);margin:0;line-height:1.5}
-.expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:13px;min-height:40px}
+.expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:13px;min-height:32px}
 .link-row{
   width:100%;border:0;background:none;min-height:44px;font-size:14px;
   color:var(--xx-primary);display:flex;align-items:center;justify-content:center;gap:4px;
@@ -691,14 +702,20 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
   function groupTable(t) {
-    return `<div class="stats-grid">
-      <div class="sg-head"><span></span><span>计费</span><span>未计费</span><span>比率</span></div>
-      <div class="sg-row"><span>出勤</span><span>${t.att}</span><span>${t.attFree}</span><span class="rate-cell">${t.attRate}</span></div>
-      <div class="sg-row"><span>缺勤</span><span>${t.abs}</span><span>${t.absFree}</span><span>${rate(t.absPeople, t.people)}</span></div>
-      <div class="sg-row"><span>缺勤已补</span><span>${t.make}</span><span>${t.makeFree}</span><span>—</span></div>
-      <div class="sg-row foot"><span>补课后出勤率</span><span></span><span></span><span class="rate-cell">${t.makeRate}</span></div>
-    </div>
-    `;
+    const empty = t.people === 0;
+    const big = (label, value) =>
+      `<div><span>${label}</span><b class="${empty ? 'empty-rate' : ''}">${value.replace('%', '<i>%</i>')}</b></div>`;
+    const row = (label, cost, free) =>
+      `<div class="r"><span>${label}</span><em><b>${cost}</b>计费 · <b>${free}</b>未计费</em></div>`;
+    return `<div class="dp-rates">
+        ${big('出勤率', t.attRate)}
+        ${big('补课后出勤率', t.makeRate)}
+      </div>
+      <div class="dp-rows">
+        ${row('出勤', t.att, t.attFree)}
+        ${row('缺勤', t.abs, t.absFree)}
+        ${row('缺勤已补', t.make, t.makeFree)}
+      </div>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
@@ -768,12 +785,10 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
-          <div class="nested">
-            ${groupTable(g.t)}
-            <div class="expanded-foot">
-              <span class="stats-note">试听 ${g.t.trial} 人次不计入${noPeople ? ' · 该分组当前全部学员未计入' : ''}</span>
-              <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
-            </div>
+          ${groupTable(g.t)}
+          <div class="expanded-foot">
+            <span class="stats-note">试听 ${g.t.trial} 人次不计入${noPeople ? ' · 该分组当前全部学员未计入' : ''}</span>
+            <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
           </div>
         </div></td></tr>` : ''}`;
     }).join('');
