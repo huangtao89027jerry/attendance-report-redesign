@@ -226,16 +226,23 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
 .group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
 .cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
-.expanded-cell{padding:0!important;background:#FAFAFA}
-.expanded-inner{padding:12px;text-align:left}
-.expanded-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.expanded-head strong{font-size:14px;font-weight:600}
-.mini-table{background:var(--surface);border-radius:var(--r-ctrl);overflow:hidden}
-.mini-table .r{display:grid;grid-template-columns:1fr repeat(3,64px);font-size:12px}
-.mini-table .r>span{padding:8px;text-align:right;border-bottom:1px solid var(--xx-border)}
-.mini-table .r>span:first-child{text-align:left;color:var(--xx-muted)}
-.mini-table .r.head>span{font-size:11px;color:var(--xx-muted);background:#FAFAFA}
-.mini-table .r:last-child>span{border-bottom:0}
+.expanded-cell{padding:0!important;background:#F7FAFF}
+.expanded-inner{padding:12px 12px 0;text-align:left;box-shadow:inset 3px 0 0 var(--xx-primary)}
+tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
+.stats-table{font-size:12px}
+.stats-table .r{display:grid;grid-template-columns:1fr 52px 52px 60px;align-items:center}
+.stats-table .r>span{padding:7px 0;text-align:right}
+.stats-table .r>span:first-child{text-align:left;color:#5A6472}
+.stats-table .r.head>span{font-size:11px;color:var(--xx-muted);padding:0 0 2px}
+.stats-table .r+.r>span{border-top:1px solid #EEF2F7}
+.stats-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;padding-top:8px;border-top:1px solid #EEF2F7;font-size:12px;
+}
+.stats-foot span{color:#5A6472}
+.stats-foot b{color:var(--xx-primary)}
+.stats-note{font-size:11px;color:var(--xx-muted);margin:8px 0 0;line-height:1.5}
+.expanded-inner .link-row{justify-content:flex-end;font-size:13px}
 .link-row{
   width:100%;border:0;background:none;min-height:44px;font-size:14px;
   color:var(--xx-primary);display:flex;align-items:center;justify-content:center;gap:4px;
@@ -670,13 +677,13 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
   function groupTable(t) {
-    return `<div class="mini-table">
+    return `<div class="stats-table">
       <div class="r head"><span>统计项</span><span>计费</span><span>未计费</span><span>比率</span></div>
       <div class="r"><span>出勤</span><span>${t.att}</span><span>${t.attFree}</span><span class="rate-cell">${t.attRate}</span></div>
       <div class="r"><span>缺勤</span><span>${t.abs}</span><span>${t.absFree}</span><span>${rate(t.absPeople, t.people)}</span></div>
       <div class="r"><span>缺勤已补</span><span>${t.make}</span><span>${t.makeFree}</span><span>—</span></div>
-      <div class="r"><span>补课后出勤率</span><span>—</span><span>—</span><span class="rate-cell">${t.makeRate}</span></div>
-    </div>`;
+    </div>
+    <div class="stats-foot"><span>补课后出勤率</span><b>${t.makeRate}</b></div>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
@@ -737,15 +744,14 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
     const rows = state.visible.map(g => {
       const open = state.expanded === g.name;
       const noPeople = g.t.people === 0;
-      return `<tr data-group="${esc(g.name)}">
+      return `<tr class="${open ? 'expanded' : ''}" data-group="${esc(g.name)}">
         <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic${open ? ' open' : ''}"></span></span></td>
         <td>${g.t.lessons}次<span class="cell-sub">${g.t.people}人次</span></td>
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
-          <div class="expanded-head"><strong>${esc(g.name)}</strong><span class="sub">试听 ${g.t.trial}</span></div>
-          ${noPeople ? '<p class="sub" style="margin:0 0 8px">该分组学员当前全部未计入统计范围（多为试听学员）。</p>' : ''}
           ${groupTable(g.t)}
+          <p class="stats-note">试听学员 ${g.t.trial} 人次，试听不计入出勤率${noPeople ? '；该分组当前全部学员未计入统计范围' : ''}</p>
           <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
         </div></td></tr>` : ''}`;
     }).join('');
