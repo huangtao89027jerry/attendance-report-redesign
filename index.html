@@ -232,29 +232,27 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
 .group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
 .cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
-/* 展开行与展开块合成同一个色块，左侧一条细线贯穿，明确"这块属于上一行" */
-tr.expanded>td{background:#F2F7FF;border-bottom:0}
-tr.expanded>td:first-child{box-shadow:inset 2px 0 0 var(--xx-primary)}
-.expanded-cell{
-  padding:0!important;background:#F2F7FF;
-  border-bottom:1px solid var(--xx-border)!important;
-  box-shadow:inset 2px 0 0 var(--xx-primary);
-}
-.expanded-inner{padding:6px 0 0;text-align:left}
+/* 展开行保持白底，靠名称主色 + 朝上的箭头表示"这行已展开" */
+tr.expanded>td{border-bottom:0}
+/* 细则做成内嵌面板：独立底色 + 圆角 + 四周留白，和汇总行彻底区分开 */
+.expanded-cell{padding:0!important;border-bottom:0!important}
+.expanded-inner{padding:0 10px 10px;text-align:left}
+.nested{background:#F1F6FF;border-radius:10px;overflow:hidden;padding-top:8px}
+.nested .expanded-foot{border-top:1px solid #DFE9F8}
 tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 /* 展开区沿用外层表格的列宽，数字才能和上面的列对齐 */
 .stats-grid{font-size:12px}
-.stats-grid>div{display:grid;grid-template-columns:34% 22% 22% 22%}
+.stats-grid>div{display:grid;grid-template-columns:1fr 54px 54px 62px}
 .stats-grid .sg-head>span{font-size:11px;color:var(--xx-muted);padding:0 6px 4px}
 .stats-grid .sg-row>span{
   display:flex;align-items:center;justify-content:flex-end;
-  padding:7px 6px;border-top:1px solid #EDF1F6;
+  padding:8px 6px;border-top:1px solid #E3ECFA;
 }
-.stats-grid .sg-row>span:first-child{justify-content:flex-start;color:#5A6472}
-.stats-grid>div>span:first-child{padding-left:24px}
-.stats-grid .sg-row.foot>span{border-top:1px solid var(--xx-border)}
+.stats-grid .sg-row>span:first-child{justify-content:flex-start;color:#4E5C6E}
+.stats-grid>div>span:first-child{padding-left:14px}
+.stats-grid .sg-row.foot>span{border-top:1px solid #D6E3F6}
 .stats-grid .sg-row.foot>span:first-child{color:var(--xx-text)}
-.expanded-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 12px 4px}
+.expanded-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 14px 10px}
 .stats-note{font-size:11px;color:var(--xx-muted);margin:0;line-height:1.5}
 .expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:13px;min-height:40px}
 .link-row{
@@ -765,10 +763,12 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
-          ${groupTable(g.t)}
-          <div class="expanded-foot">
-            <span class="stats-note">试听 ${g.t.trial} 人次不计入${noPeople ? ' · 该分组当前全部学员未计入' : ''}</span>
-            <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
+          <div class="nested">
+            ${groupTable(g.t)}
+            <div class="expanded-foot">
+              <span class="stats-note">试听 ${g.t.trial} 人次不计入${noPeople ? ' · 该分组当前全部学员未计入' : ''}</span>
+              <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
+            </div>
           </div>
         </div></td></tr>` : ''}`;
     }).join('');
