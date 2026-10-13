@@ -246,16 +246,21 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   border-radius:1px;background:#CBDDF8;
 }
 
-/* 层级约定：父级只给比率，子级只给构成，两边不重复同一个数字 */
-.dp-rows{display:grid}
-.dp-rows .r{
-  display:grid;grid-template-columns:1fr auto;align-items:center;
-  padding:8px 0;font-size:13px;
+/* 层级约定：父级给比率，子级给构成；分母提前说，包含关系用缩进表达 */
+.scope-line{font-size:11px;color:var(--xx-muted);margin:0 0 9px;line-height:1.5}
+.dp-table .r{display:grid;grid-template-columns:1fr 52px 52px 58px;align-items:center}
+.dp-table .r>span{padding:7px 0;font-size:13px;color:#4E5C6E;text-align:left}
+.dp-table .r>b{
+  padding:7px 0;font-size:13px;font-weight:400;text-align:right;
+  color:var(--xx-text);font-variant-numeric:tabular-nums;
 }
-.dp-rows .r+.r{border-top:1px solid #E8EEF8}
-.dp-rows .r>span{color:#4E5C6E}
-.dp-rows .r>em{font-style:normal;color:var(--xx-muted);font-variant-numeric:tabular-nums}
-.dp-rows .r>em b{font-weight:600;color:var(--xx-text);margin-right:3px}
+.dp-table .r>b:first-of-type{font-weight:600}
+.dp-table .r.head>span,.dp-table .r.head>b{
+  font-size:11px;color:var(--xx-muted);font-weight:400;padding:0 0 4px;
+}
+.dp-table .r:not(.head):not(.sub)>span,
+.dp-table .r:not(.head):not(.sub)>b{border-top:1px solid #E8EEF8}
+.dp-table .r.sub>span{padding-left:16px;color:var(--xx-muted)}
 
 .expanded-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -694,13 +699,14 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
   function groupTable(t) {
-    const row = (label, cost, free) =>
-      `<div class="r"><span>${label}</span><em><b>${cost}</b>计费 · <b>${free}</b>未计费</em></div>`;
-    return `<div class="dp-rows">
-        ${row('出勤', t.att, t.attFree)}
-        ${row('缺勤', t.abs, t.absFree)}
-        ${row('缺勤已补', t.make, t.makeFree)}
-      </div>`;
+    const row = (label, total, cost, free, sub) =>
+      `<div class="r${sub ? ' sub' : ''}"><span>${label}</span><b>${total}</b><b>${cost}</b><b>${free}</b></div>`;
+    return `<div class="dp-table">
+      <div class="r head"><span>统计项</span><b>人次</b><b>计费</b><b>未计费</b></div>
+      ${row('出勤', t.att + t.attFree, t.att, t.attFree)}
+      ${row('缺勤', t.abs + t.absFree, t.abs, t.absFree)}
+      ${row('其中已补', t.make + t.makeFree, t.make, t.makeFree, true)}
+    </div>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
@@ -770,9 +776,10 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
+          <p class="scope-line">应到 ${g.t.people} 人次 · 试听 ${g.t.trial} 人次不计入</p>
           ${groupTable(g.t)}
           <div class="expanded-foot">
-            <span class="stats-note">试听 ${g.t.trial} 人次不计入${noPeople ? ' · 该分组当前全部学员未计入' : ''}</span>
+            <span class="stats-note">${noPeople ? '该分组当前全部学员未计入统计范围' : ''}</span>
             <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
           </div>
         </div></td></tr>` : ''}`;
