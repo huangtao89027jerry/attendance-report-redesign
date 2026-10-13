@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>智校 · 出勤率报表（规范重设计）</title>
+<style>
+:root{
+  --xx-bg:#F5F5F5;
+  --surface:#FFFFFF;
+  --xx-primary:#1677FF;
+  --xx-primary-soft:#E6F4FF;
+  --xx-text:#333333;
+  --xx-muted:#999999;
+  --xx-border:#EEEEEE;
+  --xx-success:#00B578;
+  --xx-info:#FFF7E6;
+  --xx-danger:#FF3141;
+  --r-card:10px;
+  --r-ctrl:8px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{
+  background:#15171A;color:var(--xx-text);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 0;
+  background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.shell{
+  position:relative;width:100%;max-width:420px;height:min(880px,calc(100dvh - 48px));
+  display:flex;flex-direction:column;overflow:hidden;background:var(--xx-bg);
+  border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+@media (max-width:520px){
+  body{padding:0;background:#15171A;background-image:none}
+  .shell{max-width:none;height:100dvh;border-radius:0;box-shadow:none}
+}
+.shell-body{
+  flex:1;overflow-y:auto;overflow-x:hidden;position:relative;
+  background:linear-gradient(180deg,#E9F3FF 0,#F5F5F5 260px);
+}
+.page{display:none;padding-bottom:20px}
+.page.active{display:block}
+
+/* ---------- NavBar ---------- */
+.navbar{
+  position:sticky;top:0;z-index:20;height:44px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 4px;background:#161616;color:#fff;
+}
+.navbar h1{margin:0;font-size:17px;font-weight:600;line-height:44px;flex:1;text-align:center}
+.nav-side{min-width:56px;height:44px;display:flex;align-items:center;justify-content:center}
+.nav-back{
+  min-width:44px;height:44px;border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1;color:#fff;
+}
+.nav-link{border:0;background:none;padding:0 8px;font-size:14px;color:var(--xx-primary);height:44px}
+
+/* ---------- 通用 ---------- */
+.card{background:var(--surface);border-radius:var(--r-card);margin:12px;padding:16px}
+.card+.card{margin-top:0}
+.sec-title{font-size:16px;font-weight:600;margin:0 0 12px;line-height:1.5}
+.muted{color:var(--xx-muted)}
+.sub{font-size:12px;line-height:1.5;color:var(--xx-muted)}
+.demo-note{font-size:12px;color:var(--xx-muted);text-align:center;padding:16px 0 8px}
+.tag{
+  display:inline-block;font-size:11px;font-weight:500;line-height:1.5;
+  padding:1px 6px;border-radius:4px;
+}
+.tag-primary{background:var(--xx-primary-soft);color:var(--xx-primary)}
+.tag-warn{background:var(--xx-info);color:#B7791F}
+.tag-muted{background:#F5F5F5;color:var(--xx-muted)}
+.tag-success{background:#E8FFEA;color:var(--xx-success)}
+.btn{
+  min-height:44px;border-radius:var(--r-ctrl);border:1px solid var(--xx-border);
+  background:var(--surface);padding:0 16px;font-size:16px;display:inline-flex;
+  align-items:center;justify-content:center;
+}
+.btn-primary{background:var(--xx-primary);border-color:var(--xx-primary);color:#fff}
+.btn:active{opacity:.85}
+.btn[disabled]{opacity:.4}
+.row-btn{
+  width:100%;border:0;background:none;padding:0;display:flex;align-items:center;
+  justify-content:space-between;min-height:48px;text-align:left;
+}
+.ic{width:14px;height:14px;flex:none;display:block;color:var(--xx-muted);transition:transform .15s ease}
+.ic svg{display:block;width:100%;height:100%}
+.ic.open{transform:rotate(180deg)}
+.error{font-size:12px;line-height:1.5;color:var(--xx-danger);margin:8px 0 0}
+
+/* ---------- 身份选择 ---------- */
+.identity-intro{padding:24px 16px 8px}
+.identity-intro h2{margin:0;font-size:20px;font-weight:600}
+.identity-intro p{margin:6px 0 0;font-size:12px;color:var(--xx-muted)}
+.identity-list{padding:8px 12px}
+.identity-card{
+  width:100%;border:0;background:var(--surface);border-radius:var(--r-card);
+  padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;text-align:left;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);
+}
+.identity-card:active{background:#FAFAFA}
+.id-icon{
+  width:40px;height:40px;border-radius:var(--r-ctrl);background:var(--xx-primary-soft);
+  color:var(--xx-primary);display:flex;align-items:center;justify-content:center;flex:none;
+}
+.id-text{flex:1;min-width:0}
+.id-text strong{display:block;font-size:16px;font-weight:600;line-height:1.5}
+.id-text small{display:block;font-size:12px;color:var(--xx-muted);line-height:1.5;margin-top:2px}
+
+/* ---------- 首页 ---------- */
+.home-identity{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--xx-border);
+}
+.home-identity strong{font-size:16px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px}
+.tile{
+  position:relative;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;
+  gap:6px;font-size:12px;line-height:1.5;color:var(--xx-text);text-align:center;word-break:keep-all;
+}
+.tile i{
+  width:40px;height:40px;border-radius:11px;
+  color:var(--xx-primary);display:flex;align-items:center;justify-content:center;font-style:normal;
+  color:#fff;
+}
+.tile i svg{width:22px;height:22px}
+.ti-blue{background:#1976FF}
+.ti-yellow{background:#FFBF18}
+.ti-orange{background:#FF6436}
+.ti-green{background:#08C576}
+.ti-sky{background:#65B7FB}
+.ti-pink{background:#FF82A6}
+.tile .new{
+  position:absolute;top:-2px;left:50%;margin-left:8px;background:var(--xx-primary);color:#fff;
+  font-size:10px;border-radius:4px;padding:0 3px;line-height:14px;
+  box-shadow:0 0 0 1.5px var(--surface);
+}
+.today-row{
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+  border:0;background:none;padding:0;min-height:24px;font-size:14px;
+}
+
+/* ---------- 底部 Tab ---------- */
+.tabbar{
+  flex:none;display:grid;grid-template-columns:1fr 1fr;background:var(--surface);
+  border-top:1px solid var(--xx-border);padding-bottom:env(safe-area-inset-bottom);
+}
+.tabbar[hidden]{display:none}
+.tab{
+  border:0;background:none;min-height:56px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--xx-muted);
+}
+.tab.on{color:var(--xx-primary);font-weight:500}
+
+/* ---------- 报表页 ---------- */
+.sticky-head{position:sticky;top:0;z-index:20;background:#E9F3FF}
+.toolbar{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:12px;padding:12px 12px 8px}
+.field-box{
+  min-height:44px;border:1px solid var(--xx-border);border-radius:var(--r-ctrl);
+  background:var(--surface);padding:0 12px;display:flex;align-items:center;
+  justify-content:space-between;font-size:14px;
+}
+.icon-btn{
+  position:relative;width:44px;height:44px;border:1px solid var(--xx-border);
+  border-radius:var(--r-ctrl);background:var(--surface);display:flex;
+  align-items:center;justify-content:center;color:var(--xx-text);
+}
+.icon-btn .dot{
+  position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;
+  background:var(--xx-primary);
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 12px}
+.chip{
+  border:1px solid var(--xx-border);background:var(--surface);border-radius:14px;
+  font-size:12px;line-height:24px;padding:0 10px;color:var(--xx-text);
+}
+.chip.on{border-color:var(--xx-primary);color:var(--xx-primary);background:var(--xx-primary-soft)}
+.chip-reset{border:0;background:none;font-size:12px;color:var(--xx-primary);padding:0 4px}
+.rates{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.rate-item{text-align:center}
+.rate-item span{display:block;font-size:12px;color:var(--xx-muted);line-height:1.5}
+.rate-item b{display:block;font-size:26px;font-weight:600;color:var(--xx-primary);line-height:1.3}
+.rate-item b em{font-style:normal;font-size:14px;margin-left:1px}
+.rate-item b.empty-rate{color:var(--xx-muted);font-size:22px}
+.counts{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--xx-border);text-align:center;
+}
+.counts span{font-size:12px;color:var(--xx-muted);line-height:1.5}
+.counts b{display:block;font-size:16px;font-weight:600;color:var(--xx-text)}
+.group-toolbar{
+  display:flex;align-items:center;gap:8px;margin:0 12px 8px;font-size:13px;
+}
+.group-toolbar select{
+  border:1px solid var(--xx-border);border-radius:var(--r-ctrl);background:var(--surface);
+  height:32px;padding:0 6px;font-size:13px;max-width:110px;
+}
+.value-open{
+  border:1px solid var(--xx-border);border-radius:var(--r-ctrl);background:var(--surface);
+  height:32px;padding:0 8px;font-size:13px;display:flex;align-items:center;gap:4px;
+  max-width:42%;overflow:hidden;
+}
+.value-open span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-count{margin-left:auto;font-size:12px;color:var(--xx-muted)}
+.table-wrap{margin:0 12px;background:var(--surface);border-radius:var(--r-card);overflow:hidden}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+table.cmp th{
+  font-size:11px;font-weight:500;color:var(--xx-muted);background:#FAFAFA;
+  padding:8px 6px;text-align:right;line-height:1.4;border-bottom:1px solid var(--xx-border);
+}
+table.cmp th:first-child{text-align:left;padding-left:12px}
+table.cmp td{
+  padding:10px 6px;text-align:right;border-bottom:1px solid var(--xx-border);
+  vertical-align:middle;line-height:1.4;
+}
+table.cmp td:first-child{text-align:left;padding-left:12px}
+table.cmp tr:last-child td{border-bottom:0}
+table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
+.group-cell{display:flex;align-items:center;gap:6px}
+.group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
+.cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
+.rate-cell{color:var(--xx-primary);font-weight:500}
+.expanded-cell{padding:0!important;background:#FAFAFA}
+.expanded-inner{padding:12px;text-align:left}
+.expanded-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.expanded-head strong{font-size:14px;font-weight:600}
+.mini-table{background:var(--surface);border-radius:var(--r-ctrl);overflow:hidden}
+.mini-table .r{display:grid;grid-template-columns:1fr repeat(3,64px);font-size:12px}
+.mini-table .r>span{padding:8px;text-align:right;border-bottom:1px solid var(--xx-border)}
+.mini-table .r>span:first-child{text-align:left;color:var(--xx-muted)}
+.mini-table .r.head>span{font-size:11px;color:var(--xx-muted);background:#FAFAFA}
+.mini-table .r:last-child>span{border-bottom:0}
+.link-row{
+  width:100%;border:0;background:none;min-height:44px;font-size:14px;
+  color:var(--xx-primary);display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.load-more{display:flex;justify-content:center;padding:12px 0 4px}
+.load-more button{
+  border:1px solid var(--xx-border);background:var(--surface);border-radius:14px;
+  font-size:12px;height:32px;padding:0 14px;color:var(--xx-text);
+}
+.load-more[hidden]{display:none}
+.empty{
+  margin:0 12px;background:var(--surface);border-radius:var(--r-card);
+  padding:48px 16px;text-align:center;color:var(--xx-muted);font-size:14px;
+}
+.empty small{display:block;font-size:12px;margin-top:6px}
+
+/* ---------- 课次明细 ---------- */
+.detail-total{
+  display:flex;justify-content:space-between;padding:12px 16px 4px;
+  font-size:12px;color:var(--xx-muted);
+}
+.lesson{background:var(--surface);border-radius:var(--r-card);margin:12px;overflow:hidden}
+.lesson-head{border:0;background:none;width:100%;padding:16px;text-align:left;display:block}
+.lesson-date{font-size:15px;font-weight:600;line-height:1.5}
+.lesson-class{font-size:13px;margin:4px 0 0}
+.lesson-meta{font-size:12px;color:var(--xx-muted);line-height:1.5;margin:4px 0 0}
+.lesson-stat{
+  display:flex;align-items:center;justify-content:space-between;margin-top:10px;
+  font-size:12px;color:var(--xx-muted);
+}
+.lesson-stat b{color:var(--xx-text);font-size:14px}
+.lesson-body{border-top:1px solid var(--xx-border);padding:12px 16px 16px}
+
+/* ---------- 弹层 ---------- */
+.sheet{position:absolute;inset:0;z-index:60}
+.sheet[hidden]{display:none}
+.sheet-mask{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.sheet-panel{
+  position:absolute;left:0;right:0;bottom:0;max-height:84%;background:var(--surface);
+  border-radius:12px 12px 0 0;display:flex;flex-direction:column;
+}
+.sheet-head{
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--xx-border);
+}
+.sheet-head h3{margin:0;font-size:16px;font-weight:600}
+.sheet-close{
+  width:32px;height:32px;border:0;background:none;font-size:20px;line-height:1;
+  color:var(--xx-muted);display:flex;align-items:center;justify-content:center;
+}
+.sheet-body{flex:1;overflow-y:auto;padding:16px}
+.sheet-foot{
+  flex:none;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;
+  padding-bottom:max(16px,env(safe-area-inset-bottom));border-top:1px solid var(--xx-border);
+}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.quick button{
+  height:40px;border:1px solid var(--xx-border);border-radius:var(--r-ctrl);
+  background:var(--surface);font-size:14px;
+}
+.quick button.on{border-color:var(--xx-primary);color:var(--xx-primary);background:var(--xx-primary-soft)}
+.date-fields{display:grid;gap:12px}
+.date-fields label{display:block;font-size:12px;color:var(--xx-muted);line-height:1.5}
+.date-fields input{
+  display:block;width:100%;height:44px;margin-top:6px;border:1px solid var(--xx-border);
+  border-radius:var(--r-ctrl);padding:0 12px;background:var(--surface);font-size:14px;
+}
+.filter-group+.filter-group{margin-top:20px;padding-top:16px;border-top:1px solid var(--xx-border)}
+.filter-group h4{margin:0 0 10px;font-size:14px;font-weight:600}
+.check-list{display:grid;gap:4px}
+.check{
+  display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;
+  border:0;background:none;padding:0;text-align:left;width:100%;
+}
+.check i{
+  width:20px;height:20px;border-radius:4px;border:1px solid var(--xx-border);flex:none;
+  display:flex;align-items:center;justify-content:center;font-style:normal;
+  font-size:12px;color:transparent;background:var(--surface);
+}
+.check[aria-checked="true"] i{background:var(--xx-primary);border-color:var(--xx-primary);color:#fff}
+.search{
+  width:100%;height:44px;border:1px solid var(--xx-border);border-radius:var(--r-ctrl);
+  padding:0 12px;background:var(--surface);font-size:14px;margin-bottom:12px;
+}
+.search[hidden]{display:none}
+.search-empty{font-size:12px;color:var(--xx-muted);text-align:center;padding:24px 0}
+.toast{
+  position:absolute;left:50%;bottom:96px;transform:translateX(-50%);z-index:80;
+  background:rgba(0,0,0,.82);color:#fff;font-size:13px;line-height:1.5;
+  padding:10px 16px;border-radius:var(--r-ctrl);max-width:80%;text-align:center;
+}
+.toast[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <div class="shell-body" id="scroller">
+
+    <!-- ========== 身份选择 ========== -->
+    <section class="page active" id="page-identity">
+      <div class="navbar"><span class="nav-side"></span><h1>选择身份</h1><span class="nav-side"></span></div>
+      <div class="identity-intro">
+        <h2>刘亦菲，你好</h2>
+        <p>请选择进入移动端的身份，不同身份看到的数据范围不同</p>
+      </div>
+      <div class="identity-list" id="identityList"></div>
+      <p class="demo-note">交互演示 · 示例数据</p>
+    </section>
+
+    <!-- ========== 首页 ========== -->
+    <section class="page" id="page-home">
+      <div class="navbar">
+        <span class="nav-side"></span>
+        <h1 style="font-size:16px">刘亦菲 - 黎璐教育集团</h1>
+        <span class="nav-side"></span>
+      </div>
+      <div class="home-identity">
+        <strong id="homeRoleName">老师身份</strong>
+        <button class="nav-link" id="switchIdentity">切换身份 ›</button>
+      </div>
+      <div class="card">
+        <h2 class="sec-title">常用功能</h2>
+        <div class="grid" id="commonGrid"></div>
+      </div>
+      <div class="card">
+        <h2 class="sec-title">报表中心</h2>
+        <div class="grid" id="reportGrid"></div>
+      </div>
+      <div class="card">
+        <h2 class="sec-title">云学辅</h2>
+        <div class="grid" id="cloudGrid"></div>
+      </div>
+      <div class="card">
+        <button class="today-row" id="todayRow">
+          <span style="font-size:16px;font-weight:600">今日课表</span>
+          <span class="sub" style="display:inline-flex;align-items:center;gap:2px">共 <b id="todayCount" style="color:var(--xx-text);font-size:14px">0</b> 节课<span class="ic" data-ic="right"></span></span>
+        </button>
+      </div>
+      <p class="demo-note">交互演示 · 示例数据</p>
+    </section>
+
+    <!-- ========== 出勤率报表 ========== -->
+    <section class="page" id="page-report">
+      <div class="sticky-head">
+        <div class="navbar">
+          <button class="nav-back" id="reportBack" aria-label="返回">‹</button>
+          <h1>出勤率报表</h1>
+          <span class="nav-side"></span>
+        </div>
+        <div class="toolbar">
+          <button class="field-box" id="dateOpen" aria-haspopup="dialog">
+            <span id="dateLabel">最近30天</span><span class="ic"></span>
+          </button>
+          <button class="icon-btn" id="filterOpen" aria-label="筛选条件" aria-haspopup="dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"></path></svg>
+            <span class="dot" id="filterDot" hidden></span>
+          </button>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="card" id="overviewCard"></div>
+
+      <div class="group-toolbar">
+        <span>按</span>
+        <select id="dimSelect" aria-label="汇总维度"></select>
+        <button class="value-open" id="valueOpen" aria-haspopup="dialog">
+          <span id="valueLabel">全部</span><span class="ic"></span>
+        </button>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+
+      <div class="table-wrap" id="tableWrap"></div>
+      <div class="load-more" id="loadMoreWrap" hidden>
+        <button id="loadMore">加载更多</button>
+      </div>
+      <button class="link-row" id="allLessons">查看全部课次明细<span class="ic" data-ic="right"></span></button>
+      <p class="demo-note">交互演示 · 示例数据</p>
+    </section>
+
+    <!-- ========== 课次明细 ========== -->
+    <section class="page" id="page-detail">
+      <div class="navbar">
+        <button class="nav-back" id="detailBack" aria-label="返回">‹</button>
+        <h1>课次明细</h1>
+        <span class="nav-side"></span>
+      </div>
+      <div class="detail-total"><span id="detailTitle">课次明细</span><span id="detailTotal"></span></div>
+      <div id="lessonList"></div>
+      <p class="demo-note">交互演示 · 示例数据</p>
+    </section>
+
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-tab="home">首页</button>
+    <button class="tab" data-tab="mine">我的</button>
+  </nav>
+
+  <!-- ========== 弹层：统计时段 ========== -->
+  <div class="sheet" id="sheetDate" hidden>
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="dateTitle">
+      <div class="sheet-head">
+        <h3 id="dateTitle">统计时段</h3>
+        <button class="sheet-close" data-close aria-label="关闭">×</button>
+      </div>
+      <div class="sheet-body">
+        <div class="quick" id="dateQuick">
+          <button data-period="本月">本月</button>
+          <button data-period="上月">上月</button>
+          <button data-period="最近30天">最近30天</button>
+        </div>
+        <div class="date-fields">
+          <label>开始日期<input type="date" id="startDate"></label>
+          <label>结束日期<input type="date" id="endDate"></label>
+        </div>
+        <p class="error" id="dateError" hidden>结束日期不能早于开始日期，且不能选择今天之后的日期</p>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn" id="dateReset">重置</button>
+        <button class="btn btn-primary" id="dateApply">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 弹层：筛选条件 ========== -->
+  <div class="sheet" id="sheetFilter" hidden>
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+      <div class="sheet-head">
+        <h3 id="filterTitle">筛选条件</h3>
+        <button class="sheet-close" data-close aria-label="关闭">×</button>
+      </div>
+      <div class="sheet-body">
+        <div class="filter-group">
+          <h4>学员范围</h4>
+          <div class="check-list" id="studentRange"></div>
+          <p class="sub" style="margin:8px 0 0">选中表示计入统计，常规学员始终计入</p>
+        </div>
+        <div class="filter-group" id="teacherFilterGroup">
+          <h4>授课身份</h4>
+          <div class="check-list" id="teacherRole"></div>
+          <p class="sub" style="margin:8px 0 0">主教、助教至少保留一项</p>
+          <p class="error" id="roleError" hidden>请至少保留一个授课身份</p>
+        </div>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn" id="filterReset">重置</button>
+        <button class="btn btn-primary" id="filterApply">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 弹层：分组取值 ========== -->
+  <div class="sheet" id="sheetValue" hidden>
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="valueTitle">
+      <div class="sheet-head">
+        <h3 id="valueTitle">选择取值</h3>
+        <button class="sheet-close" data-close aria-label="关闭">×</button>
+      </div>
+      <div class="sheet-body">
+        <input class="search" id="valueSearch" type="search" placeholder="搜索" hidden>
+        <div class="check-list" id="valueList"></div>
+        <p class="error" id="valueError" hidden>请至少选择一项，或选择全部</p>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn" id="valueReset">重置</button>
+        <button class="btn btn-primary" id="valueApply">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const scroller = $('#scroller');
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------------- 日期（Asia/Shanghai） ---------------- */
+  const fmtZh = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' });
+  const TODAY = fmtZh.format(new Date());
+  const toDate = s => new Date(s + 'T12:00:00+08:00');
+  const iso = d => fmtZh.format(d);
+  const offsetDate = n => iso(new Date(toDate(TODAY).getTime() + n * 86400000));
+  function range(name) {
+    const [y, m] = TODAY.split('-').map(Number);
+    if (name === '本月') return [TODAY.slice(0, 8) + '01', TODAY];
+    if (name === '上月') {
+      const last = new Date(Date.UTC(y, m - 1, 0, 4));
+      return [iso(new Date(Date.UTC(y, m - 2, 1, 4))), iso(last)];
+    }
+    return [offsetDate(-29), TODAY];
+  }
+
+  /* ---------------- 身份 ---------------- */
+  const ROLES = {
+    teacher:    { label: '老师',   scope: '统计筛选时间内，刘亦菲在排课中担任主教或助教的出勤数据。' },
+    headmaster: { label: '班主任', scope: '统计筛选时间内，刘亦菲作为班主任的班级出勤数据。' },
+    manager:    { label: '学管师', scope: '统计筛选时间内，排课中由刘亦菲担任学管师的学员出勤数据。' },
+    principal:  { label: '校长',   scope: '统计筛选时间内，全校所有班级的出勤数据。' }
+  };
+  const IDENTITY_DESC = {
+    teacher: '我的授课数据 · 按主教 / 助教统计',
+    headmaster: '我带的班级 · 按班主任归属统计',
+    manager: '我的学员 · 按学管师归属统计',
+    principal: '全校数据 · 所有班级汇总'
+  };
+
+  /* ---------------- 示例数据 ---------------- */
+  const DIMENSIONS = ['班级名称', '课程名称', '班级标签', '上课校区', '年份', '期段', '年级', '科目', '类型', '班型'];
+  const MULTI_VALUE_DIMS = ['班级标签'];
+  const OFFSETS = [0, -2, -5, -8, -12, -16, -21, -25, -29, -36];
+  const CLASSES = [
+    { n:'机器人趣味班 A班', course:'机器人趣味课程', grade:'一年级', subject:'机器人', type:'常规课程', band:'基础班', campus:'北京乐博', tags:['常规班','重点跟进'], people:14, lessons:9,  absentPct:4,  mend:0.85, head:'me' },
+    { n:'机器人趣味班 B班', course:'机器人趣味课程', grade:'二年级', subject:'机器人', type:'常规课程', band:'基础班', campus:'上海乐博', tags:['常规班'],           people:12, lessons:8,  absentPct:8,  mend:0.60, head:'me' },
+    { n:'机器人进阶班 A班', course:'机器人进阶课程', grade:'三年级', subject:'机器人', type:'专项课程', band:'进阶班', campus:'深圳乐博', tags:['考级班'],           people:12, lessons:9,  absentPct:12, mend:0.70, head:'other' },
+    { n:'机器人进阶班 B班', course:'机器人进阶课程', grade:'一年级', subject:'机器人', type:'专项课程', band:'进阶班', campus:'北京乐博', tags:['常规班','重点跟进'], people:11, lessons:10, absentPct:16, mend:0.45, head:'me' },
+    { n:'编程基础班 A班',   course:'少儿编程课程',   grade:'二年级', subject:'编程',   type:'常规课程', band:'基础班', campus:'上海乐博', tags:['常规班'],           people:13, lessons:9,  absentPct:10, mend:0.55, head:'me' },
+    { n:'编程基础班 B班',   course:'少儿编程课程',   grade:'三年级', subject:'编程',   type:'常规课程', band:'基础班', campus:'深圳乐博', tags:['考级班'],           people:15, lessons:7,  absentPct:14, mend:0.80, head:'other' },
+    { n:'编程提高班 A班',   course:'少儿编程课程',   grade:'一年级', subject:'编程',   type:'专项课程', band:'进阶班', campus:'北京乐博', tags:['常规班','重点跟进'], people:10, lessons:9,  absentPct:19, mend:0.35, head:'me' },
+    { n:'编程提高班 B班',   course:'少儿编程课程',   grade:'二年级', subject:'编程',   type:'专项课程', band:'进阶班', campus:'上海乐博', tags:['常规班'],           people:12, lessons:8,  absentPct:24, mend:0.50, head:'other' },
+    { n:'数学思维班',       course:'数学思维课程',   grade:'三年级', subject:'数学',   type:'常规课程', band:'基础班', campus:'深圳乐博', tags:['考级班'],           people:12, lessons:6,  absentPct:7,  mend:0.75, head:'me' },
+    { n:'科学探索班',       course:'科学探索课程',   grade:'一年级', subject:'科学',   type:'常规课程', band:'基础班', campus:'北京乐博', tags:['常规班'],           people:12, lessons:9,  absentPct:11, mend:0.65, head:'other' },
+    { n:'专项试听班',       course:'体验课程',       grade:null,     subject:null,     type:null,       band:null,     campus:'上海乐博', tags:[],                   people:3,  lessons:9,  absentPct:4,  mend:0.5,  head:'other', allTrial:true },
+    { n:'未来体验班',       course:'体验课程',       grade:null,     subject:null,     type:null,       band:null,     campus:'深圳乐博', tags:[],                   people:12, lessons:2,  absentPct:12, mend:0.5,  head:'other', future:true }
+  ];
+
+  const lessons = [];
+  CLASSES.forEach((cls, c) => {
+    const offsets = cls.future ? [2, 5] : OFFSETS.slice(0, cls.lessons);
+    offsets.forEach((off, n) => {
+      // 我在这一课次里的角色：约 3/4 的课次由我参与（主教或助教）
+      const teaches = (c * 3 + n * 5) % 4 !== 0;
+      const mainId = teaches ? (n % 2 === 0 ? 'me' : 'other') : 'other';
+      const assistantId = teaches ? (n % 2 === 0 ? 'assistant-other' : 'me') : 'assistant-other';
+      const students = [];
+      for (let s = 0; s < cls.people; s++) {
+        // 缺勤 / 计费 / 补课三件事用互不对齐的散列，避免列之间出现"完全相关"的假数据
+        const absent = (s * 47 + n * 29 + c * 13) % 100 < cls.absentPct;
+        const isCost = (s * 37 + n * 23 + c * 17) % 100 >= 20;
+        const mended = (s * 7 + n * 5 + c * 11) % 100 < cls.mend * 100;
+        students.push({
+          id: 'p-' + c + '-' + n + '-' + s,
+          // 学管师只带部分班级的部分学员，保证该身份的统计范围是真实子集
+          employeeId: c % 3 !== 2 && (s * 3 + c) % 5 === 0 ? 'me' : 'other',
+          isTrial: !!cls.allTrial || s === cls.people - 1,
+          isJoin: s === 8,
+          isAdjust: s === 9,
+          isMakeup: s === 10,
+          isAttend: !absent,
+          isCost,
+          mendResult: absent && mended ? { isAttend: true, isCost } : null
+        });
+      }
+      lessons.push({
+        id: c + '-' + n,
+        date: offsetDate(off),
+        time: c % 3 === 0 ? '10:00–11:30' : c % 3 === 1 ? '14:00–15:30' : '16:00–17:00',
+        status: off > 0 ? 'scheduled' : 'finished',
+        mainId, assistantId,
+        cls, students
+      });
+    });
+  });
+  // 取消 / 撤销 / 未上课的课次不参与统计（保留在数据里用于验证口径）
+  ['cancelled', 'revoked', 'scheduled'].forEach((status, i) => {
+    lessons.push({ ...lessons[i], id: 'excluded-' + i, status, date: offsetDate(-i - 1) });
+  });
+
+  /* ---------------- 统计 ---------------- */
+  const state = {
+    role: null, page: 'identity',
+    dimension: '班级名称', values: null,
+    period: '最近30天', start: range('最近30天')[0], end: TODAY,
+    filters: { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true },
+    limit: 6, expanded: null, groups: [], visible: [],
+    detail: [], detailTitle: '', detailLimit: 6, reportScroll: 0
+  };
+  const DEFAULTS = { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true };
+  const PAGE_SIZE = 6;
+
+  function scopeLessons() {
+    if (!state.role) return [];
+    return lessons.filter(l => {
+      if (l.status !== 'finished' || l.date < state.start || l.date > state.end) return false;
+      if (state.role === 'teacher') return (state.filters.main && l.mainId === 'me') || (state.filters.assistant && l.assistantId === 'me');
+      if (state.role === 'headmaster') return l.cls.head === 'me';
+      if (state.role === 'manager') return l.students.some(p => p.employeeId === 'me');
+      return true; // 校长：全校
+    }).map(l => ({
+      ...l,
+      scoped: state.role === 'manager' ? l.students.filter(p => p.employeeId === 'me') : l.students
+    }));
+  }
+  const counted = p => (state.filters.trial || !p.isTrial) && (state.filters.join || !p.isJoin)
+    && (state.filters.adjust || !p.isAdjust) && (state.filters.makeup || !p.isMakeup);
+
+  function stats(list) {
+    const t = { lessons: 0, people: 0, trial: 0, att: 0, attFree: 0, abs: 0, absFree: 0, make: 0, makeFree: 0 };
+    const seen = new Set();
+    list.forEach(l => {
+      if (seen.has(l.id)) return;
+      seen.add(l.id);
+      t.lessons++;
+      const students = l.scoped || l.students;
+      t.trial += students.filter(p => p.isTrial).length;
+      students.filter(counted).forEach(p => {
+        t.people++;
+        t[(p.isAttend ? 'att' : 'abs') + (p.isCost ? '' : 'Free')]++;
+        if (p.mendResult && p.mendResult.isAttend) t[p.mendResult.isCost ? 'make' : 'makeFree']++;
+      });
+    });
+    t.attRate = rate(t.att + t.attFree, t.people);
+    t.makeRate = rate(t.att + t.attFree + t.make + t.makeFree, t.people);
+    t.absPeople = t.abs + t.absFree;
+    return t;
+  }
+  const rate = (n, d) => d ? (n * 100 / d).toFixed(1) + '%' : '—';
+  const namesFor = l => {
+    const v = l.cls[dimKey(state.dimension)];
+    if (Array.isArray(v)) return v.length ? Array.from(new Set(v)) : ['未指定'];
+    return [typeof v === 'string' && v.trim() ? v : '未指定'];
+  };
+  const dimKey = dim => ({ '班级名称': 'n', '课程名称': 'course', '班级标签': 'tags', '上课校区': 'campus', '年份': 'year', '期段': 'term', '年级': 'grade', '科目': 'subject', '类型': 'type', '班型': 'band' }[dim]);
+  CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
+
+  function groupTable(t) {
+    return `<div class="mini-table">
+      <div class="r head"><span>统计项</span><span>计费</span><span>未计费</span><span>比率</span></div>
+      <div class="r"><span>出勤</span><span>${t.att}</span><span>${t.attFree}</span><span class="rate-cell">${t.attRate}</span></div>
+      <div class="r"><span>缺勤</span><span>${t.abs}</span><span>${t.absFree}</span><span>${rate(t.absPeople, t.people)}</span></div>
+      <div class="r"><span>缺勤已补</span><span>${t.make}</span><span>${t.makeFree}</span><span>—</span></div>
+      <div class="r"><span>补课后出勤率</span><span>—</span><span>—</span><span class="rate-cell">${t.makeRate}</span></div>
+    </div>`;
+  }
+
+  /* ---------------- 渲染：报表 ---------------- */
+  function buildGroups() {
+    const records = scopeLessons();
+    const map = new Map();
+    records.forEach(l => namesFor(l).forEach(name => {
+      if (!map.has(name)) map.set(name, []);
+      map.get(name).push(l);
+    }));
+    state.groups = Array.from(map, ([name, list]) => ({ name, list, t: stats(list) }))
+      .sort((a, b) => {
+        if (a.name === '未指定') return 1;
+        if (b.name === '未指定') return -1;
+        const ra = a.t.people ? a.t.att + a.t.attFree : -1;
+        const rb = b.t.people ? b.t.att + b.t.attFree : -1;
+        const ga = a.t.people ? ra / a.t.people : 2;
+        const gb = b.t.people ? rb / b.t.people : 2;
+        if (ga !== gb) return ga - gb;                      // 出勤率低的排前面（找问题班级优先）
+        return a.name.localeCompare(b.name, 'zh-Hans-CN');
+      });
+    if (state.values !== null) {
+      state.groups = state.groups.filter(g => state.values.includes(g.name));
+      if (!state.groups.length) state.values = null;
+    }
+    state.visible = state.groups.slice(0, state.limit);
+    return records;
+  }
+
+  function renderReport() {
+    const records = buildGroups();
+    const total = stats(records);
+    const filtered = state.values === null ? records : records.filter(l => namesFor(l).some(n => state.values.includes(n)));
+    const shown = state.values === null ? total : stats(filtered);
+
+    $('#overviewCard').innerHTML = `
+      <h2 class="sec-title">整体概览</h2>
+      <div class="rates">
+        <div class="rate-item"><span>出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.attRate.replace('%', '<em>%</em>')}</b></div>
+        <div class="rate-item"><span>补课后出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.makeRate.replace('%', '<em>%</em>')}</b></div>
+      </div>
+      <div class="counts">
+        <span>上课次数<b>${shown.lessons}</b></span>
+        <span>人次数<b>${shown.people}</b></span>
+        <span>缺勤人次<b>${shown.absPeople}</b></span>
+        <span>试听<b>${shown.trial}</b></span>
+      </div>
+      <p class="sub" style="margin:12px 0 0">${ROLES[state.role].scope}</p>`;
+
+    const multi = MULTI_VALUE_DIMS.includes(state.dimension);
+    const head = `<thead><tr>
+        <th style="width:34%">${esc(state.dimension)}${multi ? '<br><span style="font-weight:400">同一课次可计入多个标签</span>' : ''}</th>
+        <th style="width:22%">上课次数<br>人次数</th>
+        <th style="width:22%">出勤率</th>
+        <th style="width:22%">补课后<br>出勤率</th>
+      </tr></thead>`;
+
+    const rows = state.visible.map(g => {
+      const open = state.expanded === g.name;
+      const noPeople = g.t.people === 0;
+      return `<tr data-group="${esc(g.name)}">
+        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic${open ? ' open' : ''}"></span></span></td>
+        <td>${g.t.lessons}次<span class="cell-sub">${g.t.people}人次</span></td>
+        <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
+        <td>${g.t.makeRate}</td>
+      </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
+          <div class="expanded-head"><strong>${esc(g.name)}</strong><span class="sub">试听 ${g.t.trial}</span></div>
+          ${noPeople ? '<p class="sub" style="margin:0 0 8px">该分组学员当前全部未计入统计范围（多为试听学员）。</p>' : ''}
+          ${groupTable(g.t)}
+          <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
+        </div></td></tr>` : ''}`;
+    }).join('');
+
+    const foot = `<tfoot><tr>
+        <td>合计</td>
+        <td>${shown.lessons}次<span class="cell-sub">${shown.people}人次</span></td>
+        <td class="rate-cell">${shown.attRate}</td>
+        <td>${shown.makeRate}</td>
+      </tr></tfoot>`;
+
+    $('#tableWrap').innerHTML = state.groups.length
+      ? `<table class="cmp">${head}<tbody>${rows}</tbody>${foot}</table>`
+      : '<div class="empty">当前筛选条件下暂无出勤数据<small>可调整统计时段或筛选条件后重试</small></div>';
+
+    $('#resultCount').textContent = state.groups.length + '条数据';
+    $('#valueLabel').textContent = state.values === null ? '全部' : (state.values.length === 1 ? state.values[0] : '已选' + state.values.length + '项');
+    $('#dateLabel').textContent = state.period;
+    $('#allLessons').hidden = shown.lessons === 0;
+    $('#loadMoreWrap').hidden = state.limit >= state.groups.length;
+    $('#loadMore').textContent = '加载更多（还有 ' + (state.groups.length - state.limit) + ' 条）';
+    renderChips();
+    paintIcons($('#tableWrap'));
+  }
+
+  function renderChips() {
+    const chips = [`<button class="chip on" data-open="date">${esc(state.period)}</button>`];
+    const f = state.filters;
+    const rangeText = ['trial', 'join', 'adjust', 'makeup'].filter(k => f[k]).map(k => NAMES[k]).join('/');
+    chips.push(`<button class="chip${rangeText.split('/').length < 4 ? ' on' : ''}" data-open="filter">${esc(rangeText || '不含任何学员范围')}</button>`);
+    if (state.role === 'teacher') {
+      const roleText = [f.main ? '主教' : '', f.assistant ? '助教' : ''].filter(Boolean).join('/') || '未选择';
+      chips.push(`<button class="chip${f.main && f.assistant ? '' : ' on'}" data-open="filter">${esc(roleText)}</button>`);
+    }
+    const changed = Object.keys(DEFAULTS).some(k => (state.role === 'teacher' || !['main', 'assistant'].includes(k)) && DEFAULTS[k] !== f[k]);
+    if (changed) chips.push('<button class="chip-reset" id="resetChip">恢复默认</button>');
+    $('#chips').innerHTML = chips.join('');
+    $('#filterDot').hidden = !changed;
+  }
+  const NAMES = { trial: '试听', join: '临加', adjust: '临调', makeup: '补课' };
+
+  /* ---------------- 渲染：课次明细 ---------------- */
+  function openDetail(list, title) {
+    state.detail = list.slice().sort((a, b) => b.date.localeCompare(a.date));
+    state.detailTitle = title;
+    state.detailLimit = PAGE_SIZE;
+    renderDetail();
+    showPage('detail');
+  }
+  function renderDetail() {
+    $('#detailTitle').textContent = state.detailTitle;
+    $('#detailTotal').textContent = '共 ' + state.detail.length + ' 条数据';
+    $('#lessonList').innerHTML = state.detail.slice(0, state.detailLimit).map((l, i) => {
+      const t = stats([l]);
+      const teachers = [l.mainId === 'me' ? '刘亦菲（主教）' : '陈老师（主教）',
+        l.assistantId === 'me' ? '刘亦菲（助教）' : '王老师（助教）'].join(' · ');
+      return `<div class="lesson">
+        <button class="lesson-head" data-lesson="${i}" aria-expanded="false">
+          <div class="lesson-date">${l.date}　${l.time}</div>
+          <div class="lesson-class">${esc(l.cls.n)}</div>
+          <div class="lesson-meta">${esc(teachers)}</div>
+          <div class="lesson-stat">
+            <span>实到/应到 <b>${t.att + t.attFree}/${t.people}</b></span>
+            <span>试听 <b>${t.trial}</b></span>
+            <span>出勤率 <b class="rate-cell">${t.attRate}</b></span>
+            <span class="ic"></span>
+          </div>
+        </button>
+        <div class="lesson-body" hidden>${groupTable(t)}</div>
+      </div>`;
+    }).join('') + (state.detailLimit < state.detail.length
+      ? `<div class="load-more"><button id="detailMore">加载更多（还有 ${state.detail.length - state.detailLimit} 条）</button></div>` : '');
+    $('#detailMore') && $('#detailMore').addEventListener('click', () => { state.detailLimit += PAGE_SIZE; renderDetail(); });
+    paintIcons($('#page-detail'));
+  }
+
+  /* ---------------- 渲染：身份 / 首页 ---------------- */
+  const ICONS = {
+    user: '<path d="M12 8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    team: '<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M18 21h4a6 6 0 0 0-4-5.6"/>',
+    check: '<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m8 13 2.5 2.5L16 10"/>',
+    school: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-5h6v5"/><circle cx="12" cy="11" r="2"/>',
+    chart: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>'
+  };
+  const svg = (p, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+
+  // 统一的箭头图标：同一尺寸盒子 + 同一描边，避免不同位置的箭头错位
+  const CHEV = { down: 'm6 9 6 6 6-6', right: 'm9 6 6 6-6 6' };
+  function paintIcons(root = document) {
+    $$('.ic', root).forEach(el => {
+      if (el.firstElementChild) return;
+      const d = CHEV[el.dataset.ic === 'right' ? 'right' : 'down'];
+      el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+    });
+  }
+
+  function renderIdentity() {
+    $('#identityList').innerHTML = Object.keys(ROLES).map(k => `
+      <button class="identity-card" data-identity="${k}">
+        <span class="id-icon">${svg(k === 'teacher' ? ICONS.user : k === 'headmaster' ? ICONS.team : k === 'manager' ? ICONS.check : ICONS.school)}</span>
+        <span class="id-text"><strong>${ROLES[k].label}</strong><small>${IDENTITY_DESC[k]}</small></span>
+        <span class="ic" data-ic="right"></span>
+      </button>`).join('');
+    $$('[data-identity]').forEach(b => b.addEventListener('click', () => {
+      state.role = b.dataset.identity;
+      $('#homeRoleName').textContent = ROLES[state.role].label + '身份';
+      resetQuery();
+      renderHome();
+      showPage('home');
+    }));
+  }
+
+  const COMMON = ['意向学员', '补课管理', '成绩录入', '我的审批', '退费', '结转', '班级花名册', '订单管理', '扫码核销', '签单业绩排行榜', '网上商城'];
+  const REPORTS = ['续费率', '续报报表', '销售业绩表', '家长评价排名', '工作统计', '目标完成情况', '课消业绩报表'];
+  const CLOUD = ['温故知新', '打卡', '错题本'];
+
+  // 图标沿用原版的实色圆角块 + 白色线性图标（颜色跟随功能分组）
+  const TILE_ICONS = {
+    '意向学员': ['blue', '<circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path>'],
+    '补课管理': ['yellow', '<path d="M16 14v2.2l1.6 1"></path><path d="M16 2v4"></path><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"></path><path d="M3 10h5"></path><path d="M8 2v4"></path><circle cx="16" cy="16" r="6"></circle>'],
+    '成绩录入': ['green', '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>'],
+    '我的审批': ['orange', '<path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13"></path><path d="M20 15.5a2.5 2.5 0 0 0-2.5-2.5h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"></path><path d="M5 22h14"></path>'],
+    '退费': ['orange', '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>'],
+    '结转': ['green', '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path>'],
+    '班级花名册': ['blue', '<path d="M18 21a8 8 0 0 0-16 0"></path><circle cx="10" cy="8" r="5"></circle><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"></path>'],
+    '订单管理': ['yellow', '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path>'],
+    '扫码核销': ['blue', '<path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path>'],
+    '签单业绩排行榜': ['orange', '<path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path>'],
+    '网上商城': ['orange', '<path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path>'],
+    '续费率': ['yellow', '<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m15 9-6 6"></path><path d="M9 9h.01"></path><path d="M15 15h.01"></path>'],
+    '续报报表': ['orange', '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path>'],
+    '销售业绩表': ['orange', '<path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path>'],
+    '家长评价排名': ['yellow', '<path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"></path><circle cx="12" cy="8" r="2"></circle><path d="M12 10v12"></path><path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z"></path><path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z"></path>'],
+    '工作统计': ['blue', '<rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line>'],
+    '目标完成情况': ['yellow', '<path d="M5 21v-6"></path><path d="M12 21V3"></path><path d="M19 21V9"></path>'],
+    '课消业绩报表': ['blue', '<path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>'],
+    '出勤率报表': ['blue', '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path>'],
+    '温故知新': ['sky', '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"></path><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"></path>'],
+    '打卡': ['yellow', '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="m9 16 2 2 4-4"></path>'],
+    '错题本': ['pink', '<path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M15 2v20"></path><path d="M15 7h5"></path><path d="M15 12h5"></path><path d="M15 17h5"></path>']
+  };
+  const tileIcon = label => {
+    const [color, path] = TILE_ICONS[label] || ['blue', ICONS.chart];
+    return `<i class="ti-${color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg></i>`;
+  };
+
+  function renderHome() {
+    $('#commonGrid').innerHTML = COMMON.map(t => `<button class="tile" data-todo="${t}">${tileIcon(t)}<span>${t}</span></button>`).join('');
+    $('#reportGrid').innerHTML = REPORTS.map(t => `<button class="tile" data-todo="${t}">${tileIcon(t)}<span>${t}</span></button>`).join('')
+      + `<button class="tile" id="reportEntry">${tileIcon('出勤率报表')}<span>出勤率报表</span><span class="new">新</span></button>`;
+    $('#cloudGrid').innerHTML = CLOUD.map(t => `<button class="tile" data-todo="${t}">${tileIcon(t)}<span>${t}</span></button>`).join('');
+    $$('[data-todo]').forEach(b => b.addEventListener('click', () => toast('「' + b.dataset.todo + '」不在本次改版范围')));
+    $('#reportEntry').addEventListener('click', () => { resetQuery(); renderReport(); showPage('report'); });
+    const own = scopeLessons().filter(l => l.date === TODAY);
+    $('#todayCount').textContent = String(own.length);
+    paintIcons($('#page-home'));
+  }
+
+  /* ---------------- 导航 ---------------- */
+  function showPage(page) {
+    state.page = page;
+    $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+    $('#tabbar').hidden = page !== 'home';
+    scroller.scrollTop = 0;
+  }
+  function resetQuery() {
+    state.dimension = '班级名称';
+    state.values = null;
+    state.period = '最近30天';
+    [state.start, state.end] = range('最近30天');
+    state.filters = { ...DEFAULTS };
+    state.limit = PAGE_SIZE;
+    state.expanded = null;
+  }
+
+  /* ---------------- 弹层 ---------------- */
+  let draft = null;
+  function openSheet(id) { $('#' + id).hidden = false; }
+  function closeSheet(id) { $('#' + id).hidden = true; }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    ['sheetDate', 'sheetFilter', 'sheetValue'].forEach(id => { if (!$('#' + id).hidden) closeSheet(id); });
+  });
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.closest('.sheet').id)));
+
+  /* 统计时段 */
+  let dateDraft = null;
+  $('#dateOpen').addEventListener('click', () => {
+    dateDraft = { period: state.period, start: state.start, end: state.end };
+    $('#startDate').value = dateDraft.start;
+    $('#endDate').value = dateDraft.end;
+    $('#endDate').max = TODAY;
+    $('#startDate').max = TODAY;
+    $('#dateError').hidden = true;
+    syncDateQuick();
+    openSheet('sheetDate');
+  });
+  function syncDateQuick() {
+    $$('#dateQuick button').forEach(b => b.classList.toggle('on', b.dataset.period === dateDraft.period));
+  }
+  $$('#dateQuick button').forEach(b => b.addEventListener('click', () => {
+    dateDraft.period = b.dataset.period;
+    [dateDraft.start, dateDraft.end] = range(b.dataset.period);
+    $('#startDate').value = dateDraft.start;
+    $('#endDate').value = dateDraft.end;
+    $('#dateError').hidden = true;
+    syncDateQuick();
+  }));
+  $('#startDate').addEventListener('input', () => { dateDraft.period = '自定义'; syncDateQuick(); });
+  $('#endDate').addEventListener('input', () => { dateDraft.period = '自定义'; syncDateQuick(); });
+  $('#dateReset').addEventListener('click', () => {
+    dateDraft = { period: '最近30天', start: range('最近30天')[0], end: TODAY };
+    $('#startDate').value = dateDraft.start;
+    $('#endDate').value = dateDraft.end;
+    $('#dateError').hidden = true;
+    syncDateQuick();
+  });
+  $('#dateApply').addEventListener('click', () => {
+    const s = $('#startDate').value, e = $('#endDate').value;
+    if (!s || !e || s > e || e > TODAY) { $('#dateError').hidden = false; return; }
+    state.start = s; state.end = e;
+    state.period = dateDraft.period === '自定义' ? s.slice(5).replace('-', '/') + '–' + e.slice(5).replace('-', '/') + '（' + s.slice(0, 4) + '）' : dateDraft.period;
+    closeSheet('sheetDate');
+    state.limit = PAGE_SIZE; state.expanded = null;
+    renderReport();
+  });
+
+  /* 筛选条件 */
+  const FILTER_GROUPS = [
+    { id: 'studentRange', keys: ['trial', 'join', 'adjust', 'makeup'] },
+    { id: 'teacherRole', keys: ['main', 'assistant'], label: { main: '主教', assistant: '助教' } }
+  ];
+  $('#filterOpen').addEventListener('click', () => {
+    draft = { ...state.filters };
+    $('#teacherFilterGroup').hidden = state.role !== 'teacher';
+    renderFilter();
+    $('#roleError').hidden = true;
+    openSheet('sheetFilter');
+  });
+  function renderFilter() {
+    $('#studentRange').innerHTML = ['trial', 'join', 'adjust', 'makeup'].map(k =>
+      `<button class="check" data-key="${k}" role="checkbox" aria-checked="${draft[k]}"><i>✓</i><span>${NAMES[k]}学员</span></button>`).join('');
+    $('#teacherRole').innerHTML = ['main', 'assistant'].map(k =>
+      `<button class="check" data-key="${k}" role="checkbox" aria-checked="${draft[k]}"><i>✓</i><span>${FILTER_GROUPS[1].label[k]}</span></button>`).join('');
+  }
+  $('#sheetFilter').addEventListener('click', e => {
+    const b = e.target.closest('.check');
+    if (!b) return;
+    const k = b.dataset.key;
+    if (state.role === 'teacher' && ['main', 'assistant'].includes(k) && draft[k] && !draft[k === 'main' ? 'assistant' : 'main']) {
+      $('#roleError').hidden = false;
+      return;
+    }
+    draft[k] = !draft[k];
+    $('#roleError').hidden = true;
+    renderFilter();
+  });
+  $('#filterReset').addEventListener('click', () => { draft = { ...DEFAULTS }; $('#roleError').hidden = true; renderFilter(); });
+  $('#filterApply').addEventListener('click', () => {
+    state.filters = { ...draft };
+    closeSheet('sheetFilter');
+    state.limit = PAGE_SIZE; state.expanded = null;
+    renderReport();
+  });
+
+  /* 分组取值 */
+  let valueDraft = null;
+  $('#valueOpen').addEventListener('click', () => {
+    valueDraft = state.values === null ? null : [...state.values];
+    $('#valueTitle').textContent = '选择' + state.dimension + '（可多选）';
+    const searchable = ['班级名称', '课程名称'].includes(state.dimension);
+    $('#valueSearch').hidden = !searchable;
+    $('#valueSearch').value = '';
+    $('#valueSearch').placeholder = '搜索' + state.dimension;
+    $('#valueError').hidden = true;
+    renderValue();
+    openSheet('sheetValue');
+  });
+  function renderValue() {
+    const kw = $('#valueSearch').hidden ? '' : $('#valueSearch').value.trim().toLowerCase();
+    const names = state.groups.map(g => g.name).filter(n => n.toLowerCase().includes(kw));
+    const opts = [`<button class="check" data-value="__all__" role="checkbox" aria-checked="${valueDraft === null}"><i>✓</i><span>全部</span></button>`]
+      .concat(names.map(n => `<button class="check" data-value="${esc(n)}" role="checkbox" aria-checked="${valueDraft ? valueDraft.includes(n) : false}"><i>✓</i><span>${esc(n)}</span></button>`));
+    $('#valueList').innerHTML = (kw && !names.length)
+      ? '<p class="search-empty">没有匹配的' + esc(state.dimension) + '</p>'
+      : opts.join('');
+    $('#valueError').hidden = true;
+  }
+  $('#valueSearch').addEventListener('input', renderValue);
+  $('#sheetValue').addEventListener('click', e => {
+    const b = e.target.closest('[data-value]');
+    if (!b) return;
+    const v = b.dataset.value;
+    if (v === '__all__') valueDraft = null;
+    else if (valueDraft === null) valueDraft = [v];
+    else valueDraft = valueDraft.includes(v) ? valueDraft.filter(x => x !== v) : valueDraft.concat(v);
+    renderValue();
+  });
+  $('#valueReset').addEventListener('click', () => { valueDraft = null; renderValue(); });
+  $('#valueApply').addEventListener('click', () => {
+    if (valueDraft !== null && !valueDraft.length) { $('#valueError').hidden = false; return; }
+    state.values = valueDraft === null ? null : valueDraft.slice();
+    closeSheet('sheetValue');
+    state.limit = PAGE_SIZE; state.expanded = null;
+    renderReport();
+  });
+
+  /* ---------------- 报表页交互 ---------------- */
+  $('#dimSelect').innerHTML = DIMENSIONS.map(d => `<option>${d}</option>`).join('');
+  $('#dimSelect').addEventListener('change', e => {
+    state.dimension = e.target.value;
+    state.values = null;
+    state.limit = PAGE_SIZE; state.expanded = null;
+    renderReport();
+  });
+  $('#tableWrap').addEventListener('click', e => {
+    const d = e.target.closest('[data-detail]');
+    if (d) {
+      const g = state.groups.find(x => x.name === d.dataset.detail);
+      state.reportScroll = scroller.scrollTop;
+      openDetail(g.list, g.name + ' · 课次明细');
+      return;
+    }
+    const row = e.target.closest('tr[data-group]');
+    if (!row) return;
+    const name = row.dataset.group;
+    state.expanded = state.expanded === name ? null : name;
+    renderReport();
+  });
+  $('#chips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) {
+      if (chip.dataset.open === 'date') $('#dateOpen').click();
+      else $('#filterOpen').click();
+      return;
+    }
+    if (e.target.closest('#resetChip')) {
+      resetQuery();
+      renderReport();
+      toast('已恢复默认查询条件');
+    }
+  });
+  $('#loadMore').addEventListener('click', () => { state.limit += PAGE_SIZE; renderReport(); });
+  $('#allLessons').addEventListener('click', () => {
+    const records = scopeLessons();
+    const list = state.values === null ? records : records.filter(l => namesFor(l).some(n => state.values.includes(n)));
+    state.reportScroll = scroller.scrollTop;
+    openDetail(list, '全部课次明细');
+  });
+  $('#reportBack').addEventListener('click', () => showPage('home'));
+  $('#detailBack').addEventListener('click', () => { renderReport(); showPage('report'); scroller.scrollTop = state.reportScroll; });
+  document.addEventListener('click', e => {
+    const head = e.target.closest('.lesson-head');
+    if (!head) return;
+    const body = head.nextElementSibling;
+    const open = body.hidden;
+    body.hidden = !open;
+    head.setAttribute('aria-expanded', String(open));
+    head.querySelector('.ic').classList.toggle('open', open);
+  });
+  $('#switchIdentity').addEventListener('click', () => showPage('identity'));
+  $('#todayRow').addEventListener('click', () => toast('「今日课表」不在本次改版范围'));
+  $$('.tab').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.tab === 'home') {
+      $$('.tab').forEach(x => x.classList.toggle('on', x === b));
+      return;
+    }
+    toast('「我的」不在本次改版范围');
+  }));
+
+  /* ---------------- Toast ---------------- */
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 1800);
+  }
+
+  /* ---------------- 启动 ---------------- */
+  renderIdentity();
+  renderHome();
+  paintIcons();
+  const own = scopeLessons();
+  $('#todayCount').textContent = String(own.length);
+  showPage('identity');
+})();
+</script>
+</body>
+</html>
