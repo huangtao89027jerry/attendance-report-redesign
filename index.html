@@ -246,15 +246,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   border-radius:1px;background:#CBDDF8;
 }
 
-/* 细则面板：两个大数字打头，下面是对账式明细，全程不用表格线 */
-.dp-rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 0 14px}
-.dp-rates span{display:block;font-size:11px;color:var(--xx-muted);line-height:1.5}
-.dp-rates b{
-  display:block;font-size:20px;font-weight:600;line-height:1.25;
-  color:var(--xx-primary);letter-spacing:-.01em;font-variant-numeric:tabular-nums;
-}
-.dp-rates b i{font-style:normal;font-size:12px;margin-left:1px}
-.dp-rates b.empty-rate{color:var(--xx-muted);font-size:17px}
+/* 层级约定：父级只给比率，子级只给构成，两边不重复同一个数字 */
 .dp-rows{display:grid}
 .dp-rows .r{
   display:grid;grid-template-columns:1fr auto;align-items:center;
@@ -702,16 +694,9 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
   function groupTable(t) {
-    const empty = t.people === 0;
-    const big = (label, value) =>
-      `<div><span>${label}</span><b class="${empty ? 'empty-rate' : ''}">${value.replace('%', '<i>%</i>')}</b></div>`;
     const row = (label, cost, free) =>
       `<div class="r"><span>${label}</span><em><b>${cost}</b>计费 · <b>${free}</b>未计费</em></div>`;
-    return `<div class="dp-rates">
-        ${big('出勤率', t.attRate)}
-        ${big('补课后出勤率', t.makeRate)}
-      </div>
-      <div class="dp-rows">
+    return `<div class="dp-rows">
         ${row('出勤', t.att, t.attFree)}
         ${row('缺勤', t.abs, t.absFree)}
         ${row('缺勤已补', t.make, t.makeFree)}
@@ -863,12 +848,15 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
           <div class="lesson-meta">${esc(teachers)}</div>
           <div class="lesson-stat">
             <span>实到/应到 <b>${t.att + t.attFree}/${t.people}</b></span>
-            <span>试听 <b>${t.trial}</b></span>
             <span>出勤率 <b class="rate-cell">${t.attRate}</b></span>
+            <span>补课后 <b class="rate-cell">${t.makeRate}</b></span>
             <span class="ic"></span>
           </div>
         </button>
-        <div class="lesson-body" hidden>${groupTable(t)}</div>
+        <div class="lesson-body" hidden>
+          ${groupTable(t)}
+          <p class="stats-note" style="padding:10px 0 0">试听 ${t.trial} 人次不计入</p>
+        </div>
       </div>`;
     }).join('') + (state.detailLimit < state.detail.length
       ? `<div class="load-more"><button id="detailMore">加载更多（还有 ${state.detail.length - state.detailLimit} 条）</button></div>` : '');
