@@ -232,8 +232,15 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
 .group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
 .cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
-.expanded-cell{padding:0!important;background:#F7FAFF}
-.expanded-inner{padding:8px 0 0;text-align:left}
+/* 展开行与展开块合成同一个色块，左侧一条细线贯穿，明确"这块属于上一行" */
+tr.expanded>td{background:#F2F7FF;border-bottom:0}
+tr.expanded>td:first-child{box-shadow:inset 2px 0 0 var(--xx-primary)}
+.expanded-cell{
+  padding:0!important;background:#F2F7FF;
+  border-bottom:1px solid var(--xx-border)!important;
+  box-shadow:inset 2px 0 0 var(--xx-primary);
+}
+.expanded-inner{padding:6px 0 0;text-align:left}
 tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 /* 展开区沿用外层表格的列宽，数字才能和上面的列对齐 */
 .stats-grid{font-size:12px}
@@ -244,7 +251,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   padding:7px 6px;border-top:1px solid #EDF1F6;
 }
 .stats-grid .sg-row>span:first-child{justify-content:flex-start;color:#5A6472}
-.stats-grid>div>span:first-child{padding-left:12px}
+.stats-grid>div>span:first-child{padding-left:24px}
 .stats-grid .sg-row.foot>span{border-top:1px solid var(--xx-border)}
 .stats-grid .sg-row.foot>span:first-child{color:var(--xx-text)}
 .expanded-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 12px 4px}
