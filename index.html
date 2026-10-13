@@ -246,21 +246,19 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   border-radius:1px;background:#CBDDF8;
 }
 
-/* 层级约定：父级给比率，子级给构成；分母提前说，包含关系用缩进表达 */
-.scope-line{font-size:11px;color:var(--xx-muted);margin:0 0 9px;line-height:1.5}
-.dp-table .r{display:grid;grid-template-columns:1fr 52px 52px 58px;align-items:center}
-.dp-table .r>span{padding:7px 0;font-size:13px;color:#4E5C6E;text-align:left}
-.dp-table .r>b{
-  padding:7px 0;font-size:13px;font-weight:400;text-align:right;
-  color:var(--xx-text);font-variant-numeric:tabular-nums;
+/* 手机阅读式细则：单列、一行一句、不用表头和列对齐 */
+.rd-note{font-size:11px;color:var(--xx-muted);margin:0 0 8px;line-height:1.5}
+.rd{font-size:13.5px;color:#4E5C6E;margin:0;line-height:1.95}
+.rd b{
+  font-size:15px;font-weight:600;color:var(--xx-text);
+  margin:0 2px;font-variant-numeric:tabular-nums;
 }
-.dp-table .r>b:first-of-type{font-weight:600}
-.dp-table .r.head>span,.dp-table .r.head>b{
-  font-size:11px;color:var(--xx-muted);font-weight:400;padding:0 0 4px;
+.rd i{
+  font-style:normal;font-size:12px;color:var(--xx-muted);
+  white-space:nowrap;margin-left:2px;
 }
-.dp-table .r:not(.head):not(.sub)>span,
-.dp-table .r:not(.head):not(.sub)>b{border-top:1px solid #E8EEF8}
-.dp-table .r.sub>span{padding-left:16px;color:var(--xx-muted)}
+.rd.sub{padding-left:14px;font-size:12px;color:var(--xx-muted)}
+.rd.sub b{font-size:13px;color:#4E5C6E}
 
 .expanded-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -698,15 +696,12 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   const dimKey = dim => ({ '班级名称': 'n', '课程名称': 'course', '班级标签': 'tags', '上课校区': 'campus', '年份': 'year', '期段': 'term', '年级': 'grade', '科目': 'subject', '类型': 'type', '班型': 'band' }[dim]);
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
-  function groupTable(t) {
-    const row = (label, total, cost, free, sub) =>
-      `<div class="r${sub ? ' sub' : ''}"><span>${label}</span><b>${total}</b><b>${cost}</b><b>${free}</b></div>`;
-    return `<div class="dp-table">
-      <div class="r head"><span>统计项</span><b>人次</b><b>计费</b><b>未计费</b></div>
-      ${row('出勤', t.att + t.attFree, t.att, t.attFree)}
-      ${row('缺勤', t.abs + t.absFree, t.abs, t.absFree)}
-      ${row('其中已补', t.make + t.makeFree, t.make, t.makeFree, true)}
-    </div>`;
+  // 明细按「一句话一行」组织，配合手机端从上往下的阅读顺序
+  function groupTable(t, withScope = true) {
+    return `${withScope ? `<p class="rd-note">应到 <b>${t.people}</b> 人次 · 试听 <b>${t.trial}</b> 人次不计入</p>` : ''}
+      <p class="rd">出勤<b>${t.att + t.attFree}</b>人次<i>（计费 ${t.att} · 未计费 ${t.attFree}）</i></p>
+      <p class="rd">缺勤<b>${t.abs + t.absFree}</b>人次<i>（计费 ${t.abs} · 未计费 ${t.absFree}）</i></p>
+      <p class="rd sub">其中<b>${t.make + t.makeFree}</b>人次已补课</p>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
@@ -776,7 +771,6 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
-          <p class="scope-line">应到 ${g.t.people} 人次 · 试听 ${g.t.trial} 人次不计入</p>
           ${groupTable(g.t)}
           <div class="expanded-foot">
             <span class="stats-note">${noPeople ? '该分组当前全部学员未计入统计范围' : ''}</span>
@@ -861,7 +855,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
           </div>
         </button>
         <div class="lesson-body" hidden>
-          ${groupTable(t)}
+          ${groupTable(t, false)}
           <p class="stats-note" style="padding:10px 0 0">试听 ${t.trial} 人次不计入</p>
         </div>
       </div>`;
