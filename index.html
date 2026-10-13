@@ -246,19 +246,16 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   border-radius:1px;background:#CBDDF8;
 }
 
-/* 手机阅读式细则：单列、一行一句、不用表头和列对齐 */
-.rd-note{font-size:11px;color:var(--xx-muted);margin:0 0 8px;line-height:1.5}
-.rd{font-size:13.5px;color:#4E5C6E;margin:0;line-height:1.95}
-.rd b{
-  font-size:15px;font-weight:600;color:var(--xx-text);
-  margin:0 2px;font-variant-numeric:tabular-nums;
+/* 层级自上而下递减：主信息 15px → 明细 12px → 注脚 11px */
+.rd-g+.rd-g{margin-top:10px}
+.rd-main{font-size:15px;font-weight:400;color:#3D4857;margin:0;line-height:1.8}
+.rd-main b{font-weight:600;color:var(--xx-text);margin:0 2px;font-variant-numeric:tabular-nums}
+.rd-sub{font-size:12px;color:var(--xx-muted);margin:0;line-height:1.75;padding-left:14px}
+.rd-sub b{font-weight:600;color:#5A6472;font-variant-numeric:tabular-nums}
+.rd-note{
+  font-size:11px;color:var(--xx-muted);margin:10px 0 0;
+  padding-top:8px;border-top:1px solid #E8EEF8;line-height:1.5;
 }
-.rd i{
-  font-style:normal;font-size:12px;color:var(--xx-muted);
-  white-space:nowrap;margin-left:2px;
-}
-.rd.sub{padding-left:14px;font-size:12px;color:var(--xx-muted)}
-.rd.sub b{font-size:13px;color:#4E5C6E}
 
 .expanded-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -696,12 +693,18 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   const dimKey = dim => ({ '班级名称': 'n', '课程名称': 'course', '班级标签': 'tags', '上课校区': 'campus', '年份': 'year', '期段': 'term', '年级': 'grade', '科目': 'subject', '类型': 'type', '班型': 'band' }[dim]);
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
-  // 明细按「一句话一行」组织，配合手机端从上往下的阅读顺序
+  // 明细按「从上到下、层级递减」组织：主信息 → 明细 → 口径注脚
   function groupTable(t, withScope = true) {
-    return `${withScope ? `<p class="rd-note">应到 <b>${t.people}</b> 人次 · 试听 <b>${t.trial}</b> 人次不计入</p>` : ''}
-      <p class="rd">出勤<b>${t.att + t.attFree}</b>人次<i>（计费 ${t.att} · 未计费 ${t.attFree}）</i></p>
-      <p class="rd">缺勤<b>${t.abs + t.absFree}</b>人次<i>（计费 ${t.abs} · 未计费 ${t.absFree}）</i></p>
-      <p class="rd sub">其中<b>${t.make + t.makeFree}</b>人次已补课</p>`;
+    return `<div class="rd-g">
+        <p class="rd-main">出勤 <b>${t.att + t.attFree}</b> 人次</p>
+        <p class="rd-sub">计费 <b>${t.att}</b> · 未计费 <b>${t.attFree}</b></p>
+      </div>
+      <div class="rd-g">
+        <p class="rd-main">缺勤 <b>${t.abs + t.absFree}</b> 人次</p>
+        <p class="rd-sub">计费 <b>${t.abs}</b> · 未计费 <b>${t.absFree}</b></p>
+        <p class="rd-sub">其中已补 <b>${t.make + t.makeFree}</b> 人次</p>
+      </div>
+      ${withScope ? `<p class="rd-note">应到 ${t.people} 人次 · 试听 ${t.trial} 人次不计入</p>` : ''}`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
