@@ -188,12 +188,14 @@ button{cursor:pointer}
 .rate-item b{display:block;font-size:26px;font-weight:600;color:var(--xx-primary);line-height:1.3}
 .rate-item b em{font-style:normal;font-size:14px;margin-left:1px}
 .rate-item b.empty-rate{color:var(--xx-muted);font-size:22px}
-.counts{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;
-  padding-top:12px;border-top:1px solid var(--xx-border);text-align:center;
+.sec-head{display:flex;align-items:center;justify-content:space-between}
+.sec-head .sec-title{margin:0}
+.info-btn{
+  width:24px;height:24px;border:1px solid var(--xx-border);border-radius:50%;
+  background:none;color:var(--xx-muted);font-size:12px;line-height:1;
+  display:flex;align-items:center;justify-content:center;font-style:italic;
 }
-.counts span{font-size:12px;color:var(--xx-muted);line-height:1.5}
-.counts b{display:block;font-size:16px;font-weight:600;color:var(--xx-text)}
+.stats-line{font-size:12px;color:var(--xx-muted);text-align:center;margin:12px 0 0;line-height:1.5}
 .group-toolbar{
   display:flex;align-items:center;gap:8px;margin:0 12px 8px;font-size:13px;
 }
@@ -381,7 +383,6 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
           <span class="sub" style="display:inline-flex;align-items:center;gap:2px">共 <b id="todayCount" style="color:var(--xx-text);font-size:14px">0</b> 节课<span class="ic" data-ic="right"></span></span>
         </button>
       </div>
-      <p class="demo-note">交互演示 · 示例数据</p>
     </section>
 
     <!-- ========== 出勤率报表 ========== -->
@@ -420,7 +421,6 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <button id="loadMore">加载更多</button>
       </div>
       <button class="link-row" id="allLessons">查看全部课次明细<span class="ic" data-ic="right"></span></button>
-      <p class="demo-note">交互演示 · 示例数据</p>
     </section>
 
     <!-- ========== 课次明细 ========== -->
@@ -432,7 +432,6 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
       </div>
       <div class="detail-total"><span id="detailTitle">课次明细</span><span id="detailTotal"></span></div>
       <div id="lessonList"></div>
-      <p class="demo-note">交互演示 · 示例数据</p>
     </section>
 
   </div>
@@ -720,18 +719,21 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
     const shown = state.values === null ? total : stats(filtered);
 
     $('#overviewCard').innerHTML = `
-      <h2 class="sec-title">整体概览</h2>
+      <div class="sec-head">
+        <h2 class="sec-title">整体概览</h2>
+        <button class="info-btn" id="scopeInfo" aria-label="统计口径" aria-expanded="false">i</button>
+      </div>
       <div class="rates">
         <div class="rate-item"><span>出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.attRate.replace('%', '<em>%</em>')}</b></div>
         <div class="rate-item"><span>补课后出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.makeRate.replace('%', '<em>%</em>')}</b></div>
       </div>
-      <div class="counts">
-        <span>上课次数<b>${shown.lessons}</b></span>
-        <span>人次数<b>${shown.people}</b></span>
-        <span>缺勤人次<b>${shown.absPeople}</b></span>
-        <span>试听<b>${shown.trial}</b></span>
-      </div>
-      <p class="sub" style="margin:12px 0 0">${ROLES[state.role].scope}</p>`;
+      <p class="stats-line">共 ${shown.lessons} 次课 · ${shown.people} 人次 · 缺勤 ${shown.absPeople} · 试听 ${shown.trial}</p>
+      <p class="stats-note" id="scopeLine" hidden>${ROLES[state.role].scope}${state.role === 'teacher' ? '默认不含试听学员。' : ''}</p>`;
+    $('#scopeInfo').addEventListener('click', () => {
+      const line = $('#scopeLine');
+      line.hidden = !line.hidden;
+      $('#scopeInfo').setAttribute('aria-expanded', String(!line.hidden));
+    });
 
     const multi = MULTI_VALUE_DIMS.includes(state.dimension);
     const head = `<thead><tr>
@@ -778,18 +780,29 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
   }
 
   function renderChips() {
-    const chips = [`<button class="chip on" data-open="date">${esc(state.period)}</button>`];
     const f = state.filters;
-    const rangeText = ['trial', 'join', 'adjust', 'makeup'].filter(k => f[k]).map(k => NAMES[k]).join('/');
-    chips.push(`<button class="chip${rangeText.split('/').length < 4 ? ' on' : ''}" data-open="filter">${esc(rangeText || '不含任何学员范围')}</button>`);
-    if (state.role === 'teacher') {
-      const roleText = [f.main ? '主教' : '', f.assistant ? '助教' : ''].filter(Boolean).join('/') || '未选择';
-      chips.push(`<button class="chip${f.main && f.assistant ? '' : ' on'}" data-open="filter">${esc(roleText)}</button>`);
+    const studentChanged = ['trial', 'join', 'adjust', 'makeup'].some(k => f[k] !== DEFAULTS[k]);
+    const roleChanged = state.role === 'teacher' && (f.main !== DEFAULTS.main || f.assistant !== DEFAULTS.assistant);
+    // 日期在工具栏已经显示，这里不再重复；默认条件不占位，改过之后才出现
+    if (!studentChanged && !roleChanged) {
+      $('#chips').innerHTML = '';
+      $('#chips').hidden = true;
+      $('#filterDot').hidden = true;
+      return;
     }
-    const changed = Object.keys(DEFAULTS).some(k => (state.role === 'teacher' || !['main', 'assistant'].includes(k)) && DEFAULTS[k] !== f[k]);
-    if (changed) chips.push('<button class="chip-reset" id="resetChip">恢复默认</button>');
+    const chips = [];
+    if (studentChanged) {
+      const on = ['trial', 'join', 'adjust', 'makeup'].filter(k => f[k]).map(k => NAMES[k]).join('/');
+      chips.push(`<button class="chip on" data-open="filter">学员：${esc(on || '无')}</button>`);
+    }
+    if (roleChanged) {
+      const roleText = [f.main ? '主教' : '', f.assistant ? '助教' : ''].filter(Boolean).join('/') || '无';
+      chips.push(`<button class="chip on" data-open="filter">授课身份：${esc(roleText)}</button>`);
+    }
+    chips.push('<button class="chip-reset" id="resetChip">恢复默认</button>');
     $('#chips').innerHTML = chips.join('');
-    $('#filterDot').hidden = !changed;
+    $('#chips').hidden = false;
+    $('#filterDot').hidden = false;
   }
   const NAMES = { trial: '试听', join: '临加', adjust: '临调', makeup: '补课' };
 
