@@ -232,27 +232,32 @@ table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
 .group-cell .name{flex:1;min-width:0;font-size:13px;line-height:1.4;word-break:break-all}
 .cell-sub{display:block;font-size:11px;color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
-/* 展开行保持白底，靠名称主色 + 朝上的箭头表示"这行已展开" */
-tr.expanded>td{border-bottom:0}
-/* 细则做成内嵌面板：独立底色 + 圆角 + 四周留白，和汇总行彻底区分开 */
-.expanded-cell{padding:0!important;border-bottom:0!important}
-.expanded-inner{padding:0 10px 10px;text-align:left}
-.nested{background:#F1F6FF;border-radius:10px;overflow:hidden;padding-top:8px}
-.nested .expanded-foot{border-top:1px solid #DFE9F8}
+/* 展开的那条父行铺浅蓝底 → 和其它未展开的父行区分开 */
+tr.expanded>td{background:#F1F6FF;border-bottom:0}
+.expanded-cell{
+  padding:0!important;background:#F1F6FF;
+  border-bottom:1px solid var(--xx-border)!important;
+}
+/* 细则做成嵌在浅蓝条里的白卡：圆角 + 四周留白 → 区块感 */
+.expanded-inner{padding:2px 10px 10px;text-align:left}
+.nested{background:var(--surface);border-radius:10px;overflow:hidden;padding-top:6px}
 tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 /* 展开区沿用外层表格的列宽，数字才能和上面的列对齐 */
 .stats-grid{font-size:12px}
 .stats-grid>div{display:grid;grid-template-columns:1fr 54px 54px 62px}
-.stats-grid .sg-head>span{font-size:11px;color:var(--xx-muted);padding:0 6px 4px}
+.stats-grid .sg-head>span{font-size:11px;color:var(--xx-muted);padding:0 6px 4px;text-align:right}
 .stats-grid .sg-row>span{
   display:flex;align-items:center;justify-content:flex-end;
-  padding:8px 6px;border-top:1px solid #E3ECFA;
+  padding:8px 6px;border-top:1px solid #EEF1F5;
 }
 .stats-grid .sg-row>span:first-child{justify-content:flex-start;color:#4E5C6E}
 .stats-grid>div>span:first-child{padding-left:14px}
-.stats-grid .sg-row.foot>span{border-top:1px solid #D6E3F6}
+.stats-grid .sg-row.foot>span{border-top:1px solid var(--xx-border)}
 .stats-grid .sg-row.foot>span:first-child{color:var(--xx-text)}
-.expanded-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 14px 10px}
+.expanded-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 14px 10px;border-top:1px solid var(--xx-border);
+}
 .stats-note{font-size:11px;color:var(--xx-muted);margin:0;line-height:1.5}
 .expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:13px;min-height:40px}
 .link-row{
