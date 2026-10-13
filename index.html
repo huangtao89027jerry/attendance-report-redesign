@@ -189,10 +189,15 @@ button{cursor:pointer}
 .rate-item b.empty-rate{color:var(--xx-muted);font-size:22px}
 .sec-head{display:flex;align-items:center;justify-content:space-between}
 .sec-head .sec-title{margin:0}
-.info-btn{
-  width:24px;height:24px;border:1px solid var(--xx-border);border-radius:50%;
-  background:none;color:var(--xx-muted);font-size:12px;line-height:1;
-  display:flex;align-items:center;justify-content:center;font-style:italic;
+/* 统计口径说明放在头部区最上方，和参考版一致 */
+.scope-line{
+  margin:0;padding:0 12px 8px;font-size:12px;line-height:1.6;
+  color:#5A7A9E;display:flex;gap:6px;align-items:flex-start;
+}
+.scope-line::before{
+  content:"i";flex:none;width:16px;height:16px;margin-top:2px;border-radius:50%;
+  border:1px solid #9BBCDD;color:#7BA0C6;font-size:11px;font-style:italic;
+  display:flex;align-items:center;justify-content:center;
 }
 .stats-line{font-size:12px;color:var(--xx-muted);text-align:center;margin:12px 0 0;line-height:1.5}
 .stat-row{
@@ -225,7 +230,7 @@ table.cmp th{
 }
 table.cmp th:first-child{text-align:left;padding-left:12px}
 table.cmp td{
-  padding:10px 6px;text-align:right;border-bottom:1px solid var(--xx-border);
+  padding:13px 6px;text-align:right;border-bottom:1px solid var(--xx-border);
   vertical-align:middle;line-height:1.4;
 }
 table.cmp td:first-child{text-align:left;padding-left:12px}
@@ -423,6 +428,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
             <h1>出勤率报表</h1>
             <span class="nav-side"></span>
           </div>
+          <p class="scope-line" id="scopeLine"></p>
           <div class="toolbar">
             <button class="field-box" id="dateOpen" aria-haspopup="dialog">
               <span id="dateLabel">最近30天</span><span class="ic"></span>
@@ -753,10 +759,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
     const shown = state.values === null ? total : stats(filtered);
 
     $('#overviewCard').innerHTML = `
-      <div class="sec-head">
-        <h2 class="sec-title">整体概览</h2>
-        <button class="info-btn" id="scopeInfo" aria-label="统计口径" aria-expanded="false">i</button>
-      </div>
+      <h2 class="sec-title">整体概览</h2>
       <div class="rates">
         <div class="rate-item"><span>出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.attRate.replace('%', '<em>%</em>')}</b></div>
         <div class="rate-item"><span>补课后出勤率</span><b class="${shown.people ? '' : 'empty-rate'}">${shown.makeRate.replace('%', '<em>%</em>')}</b></div>
@@ -767,12 +770,8 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         <span>缺勤人数<b>${shown.absPeople}</b></span>
         <span>试听<b>${shown.trial}</b></span>
       </div>
-      <p class="stats-note" id="scopeLine" hidden>${ROLES[state.role].scope}${state.role === 'teacher' ? '默认不含试听学员。' : ''}</p>`;
-    $('#scopeInfo').addEventListener('click', () => {
-      const line = $('#scopeLine');
-      line.hidden = !line.hidden;
-      $('#scopeInfo').setAttribute('aria-expanded', String(!line.hidden));
-    });
+      `;
+    $('#scopeLine').textContent = ROLES[state.role].scope;
 
     const multi = MULTI_VALUE_DIMS.includes(state.dimension);
     const head = `<thead><tr>
