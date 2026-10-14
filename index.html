@@ -142,7 +142,7 @@ button{cursor:pointer}
 .ti-pink{background:#FF82A6}
 .tile .new{
   position:absolute;top:-2px;left:50%;margin-left:8px;background:var(--xx-primary);color:#fff;
-  font-size:var(--fs-tag);border-radius:4px;padding:0 3px;line-height:14px;
+  font-size:var(--fs-tag);border-radius:4px;padding:0 4px;line-height:16px;
   box-shadow:0 0 0 1.5px var(--surface);
 }
 .today-row{
@@ -250,29 +250,34 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
 .cell-sub{display:block;font-size:var(--fs-tag);color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary)}
 
-/* ---- 分组展开：选中行浅蓝底 + 白色卡片（标题 / 统计表 / 补课后行 / 明细入口） ---- */
+/* ---- 分组展开（交互沿用原型，视觉按规范） ----
+   规则：卡内只允许两种表面 —— 白色卡底 + 主色浅底（仅主操作）；
+   层与层之间靠 字号 / 字色 / 一条 1px 分隔线 区分，不再叠灰色底条。
+   内层统计表与外层列表共用同一套列宽（34 / 22 / 22 / 22）。 */
 .summary-row.expanded>td{background:var(--xx-primary-soft)}
 .expanded-row>td{padding:0 12px 12px!important;background:var(--xx-primary-soft)}
 .row-statistics{padding:12px;background:var(--surface);border-radius:var(--r-card)}
 .inline-title{
   display:flex;justify-content:space-between;gap:8px;align-items:baseline;
-  font-size:var(--fs-tag);color:var(--xx-muted);margin-bottom:8px;
+  margin-bottom:4px;
 }
-.inline-title strong{font-size:var(--fs-aux);font-weight:500;color:var(--xx-text)}
+.inline-title strong{font-size:var(--fs-body);font-weight:500;color:var(--xx-text)}
+.inline-title span{font-size:var(--fs-tag);color:var(--xx-muted)}
 .stats-table{font-variant-numeric:tabular-nums}
 .stats-row{
-  display:grid;grid-template-columns:29% 23% 21% 27%;align-items:center;
-  min-height:32px;padding:0 8px;
+  display:grid;grid-template-columns:34% 22% 22% 22%;align-items:center;
+  min-height:36px;padding:0 8px;
 }
 .stats-row>span{font-size:var(--fs-aux);color:var(--xx-text);text-align:right;white-space:nowrap}
 .stats-row>span:first-child{text-align:left}
 .stats-row>span.rate{color:var(--xx-primary)}
-.stats-head{min-height:32px;background:var(--xx-bg);border-radius:var(--r-ctrl);margin:0 0 4px}
-.stats-head>span{font-size:var(--fs-tag);color:var(--xx-muted)}
+.stats-head{min-height:28px}
+.stats-head>span{font-size:var(--fs-tag);font-weight:500;color:var(--xx-muted)}
 .after{
   display:flex;align-items:center;justify-content:space-between;
-  min-height:32px;margin-top:4px;padding:0 8px;border-radius:var(--r-ctrl);
-  background:var(--xx-bg);font-size:var(--fs-aux);color:var(--xx-muted);
+  min-height:36px;margin-top:4px;padding:0 8px;
+  border-top:1px solid var(--xx-border);
+  font-size:var(--fs-aux);color:var(--xx-muted);
 }
 .after strong{font-size:var(--fs-body);font-weight:400;color:var(--xx-primary);font-variant-numeric:tabular-nums}
 .lesson-link{
