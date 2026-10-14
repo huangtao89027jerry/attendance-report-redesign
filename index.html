@@ -262,8 +262,13 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
   padding:12px;background:var(--surface);border-radius:var(--r-card);
   box-shadow:0 8px 20px rgba(22,119,255,.10);
 }
-/* 卡片顶部不放班级名（上面那行已经写了），改放统计口径 */
-.row-statistics .scope-line{margin:0 0 4px;padding:0;font-size:var(--fs-tag);color:var(--xx-muted);display:block}
+/* 卡片标题行：班级名 + 试听（沿用原型的字段） */
+.inline-title{
+  display:flex;justify-content:space-between;gap:8px;align-items:baseline;
+  margin-bottom:4px;
+}
+.inline-title strong{font-size:var(--fs-body);font-weight:500;color:var(--xx-text)}
+.inline-title span{font-size:var(--fs-aux);color:var(--xx-muted)}
 .stats-table{font-variant-numeric:tabular-nums}
 .stats-row{
   display:grid;grid-template-columns:34% 22% 22% 22%;align-items:center;
@@ -472,7 +477,6 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
       <div class="load-more" id="loadMoreWrap" hidden>
         <button id="loadMore">加载更多</button>
       </div>
-      <button class="link-row" id="allLessons">查看全部课次明细<span class="ic" data-ic="right"></span></button>
     </section>
 
     <!-- ========== 课次明细 ========== -->
@@ -785,7 +789,6 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
       <div class="stat-row">
         <span>上课次数<b>${shown.lessons}</b></span>
         <span>人次数<b>${shown.people}</b></span>
-        <span>缺勤人数<b>${shown.absPeople}</b></span>
         <span>试听<b>${shown.trial}</b></span>
       </div>
       `;
@@ -809,28 +812,20 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
         <td>${g.t.makeRate}</td>
       </tr>${open ? `<tr class="expanded-row"><td colspan="4">
           <div class="row-statistics">
-            <p class="scope-line">应到 ${g.t.people} 人次 · 试听 ${g.t.trial} 人次不计入</p>
+            <div class="inline-title"><strong>${esc(g.name)}</strong><span>试听 ${g.t.trial}</span></div>
             ${groupTable(g.t)}
             <button class="lesson-link" data-detail="${esc(g.name)}"><span>查看课次明细</span><span class="ic" data-ic="right"></span></button>
           </div>
         </td></tr>` : ''}`;
     }).join('');
 
-    const foot = `<tfoot><tr>
-        <td>合计</td>
-        <td>${shown.lessons}次<span class="cell-sub">${shown.people}人次</span></td>
-        <td class="rate-cell">${shown.attRate}</td>
-        <td>${shown.makeRate}</td>
-      </tr></tfoot>`;
-
     $('#tableWrap').innerHTML = state.groups.length
-      ? `<table class="cmp">${head}<tbody>${rows}</tbody>${foot}</table>`
+      ? `<table class="cmp">${head}<tbody>${rows}</tbody></table>`
       : '<div class="empty">当前筛选条件下暂无出勤数据<small>可调整统计时段或筛选条件后重试</small></div>';
 
     $('#resultCount').textContent = state.groups.length + '条数据';
     $('#valueLabel').textContent = state.values === null ? '全部' : (state.values.length === 1 ? state.values[0] : '已选' + state.values.length + '项');
     $('#dateLabel').textContent = state.period;
-    $('#allLessons').hidden = shown.lessons === 0;
     $('#loadMoreWrap').hidden = state.limit >= state.groups.length;
     $('#loadMore').textContent = '加载更多（还有 ' + (state.groups.length - state.limit) + ' 条）';
     renderChips();
@@ -1164,12 +1159,6 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
     }
   });
   $('#loadMore').addEventListener('click', () => { state.limit += PAGE_SIZE; renderReport(); });
-  $('#allLessons').addEventListener('click', () => {
-    const records = scopeLessons();
-    const list = state.values === null ? records : records.filter(l => namesFor(l).some(n => state.values.includes(n)));
-    state.reportScroll = scroller.scrollTop;
-    openDetail(list, '全部课次明细');
-  });
   $('#reportBack').addEventListener('click', () => showPage('home'));
   $('#detailBack').addEventListener('click', () => { renderReport(); showPage('report'); scroller.scrollTop = state.reportScroll; });
   document.addEventListener('click', e => {
