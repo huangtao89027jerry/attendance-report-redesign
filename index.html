@@ -76,12 +76,11 @@ button{cursor:pointer}
 .demo-note{font-size:var(--fs-aux);color:var(--xx-muted);text-align:center;padding:16px 0 8px}
 .tag{
   display:inline-block;font-size:var(--fs-tag);font-weight:500;line-height:1.5;
-  padding:1px 6px;border-radius:4px;
+  padding:2px 8px;border-radius:4px;
 }
 .tag-primary{background:var(--xx-primary-soft);color:var(--xx-primary)}
-.tag-warn{background:var(--xx-info);color:#B7791F}
+.tag-warn{background:var(--xx-info);color:var(--xx-text)}
 .tag-muted{background:#F5F5F5;color:var(--xx-muted)}
-.tag-success{background:#E8FFEA;color:var(--xx-success)}
 .btn{
   min-height:44px;border-radius:var(--r-ctrl);border:1px solid var(--xx-border);
   background:var(--surface);padding:0 16px;font-size:var(--fs-section);display:inline-flex;
@@ -102,14 +101,14 @@ button{cursor:pointer}
 /* ---------- 身份选择 ---------- */
 .identity-intro{padding:24px 16px 8px}
 .identity-intro h2{margin:0;font-size:var(--fs-title);font-weight:600}
-.identity-intro p{margin:6px 0 0;font-size:var(--fs-aux);color:var(--xx-muted)}
+.identity-intro p{margin:8px 0 0;font-size:var(--fs-aux);color:var(--xx-muted)}
 .identity-list{padding:8px 12px}
 .identity-card{
   width:100%;border:0;background:var(--surface);border-radius:var(--r-card);
   padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;text-align:left;
   box-shadow:0 1px 2px rgba(0,0,0,.03);
 }
-.identity-card:active{background:#FAFAFA}
+.identity-card:active{background:var(--xx-bg)}
 .id-icon{
   width:40px;height:40px;border-radius:var(--r-ctrl);background:var(--xx-primary-soft);
   color:var(--xx-primary);display:flex;align-items:center;justify-content:center;flex:none;
@@ -127,10 +126,10 @@ button{cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px}
 .tile{
   position:relative;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;
-  gap:6px;font-size:var(--fs-aux);line-height:1.5;color:var(--xx-text);text-align:center;word-break:keep-all;
+  gap:8px;font-size:var(--fs-aux);line-height:1.5;color:var(--xx-text);text-align:center;word-break:keep-all;
 }
 .tile i{
-  width:40px;height:40px;border-radius:11px;
+  width:40px;height:40px;border-radius:var(--r-card);
   color:var(--xx-primary);display:flex;align-items:center;justify-content:center;font-style:normal;
   color:#fff;
 }
@@ -184,8 +183,8 @@ button{cursor:pointer}
 }
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 12px}
 .chip{
-  border:1px solid var(--xx-border);background:var(--surface);border-radius:14px;
-  font-size:var(--fs-aux);line-height:24px;padding:0 10px;color:var(--xx-text);
+  border:1px solid var(--xx-border);background:var(--surface);border-radius:4px;
+  font-size:var(--fs-aux);line-height:24px;padding:0 12px;color:var(--xx-text);
 }
 .chip.on{border-color:var(--xx-primary);color:var(--xx-primary);background:var(--xx-primary-soft)}
 .chip-reset{border:0;background:none;font-size:var(--fs-aux);color:var(--xx-primary);padding:0 4px}
@@ -200,11 +199,11 @@ button{cursor:pointer}
 /* 统计口径说明放在头部区最上方，和参考版一致 */
 .scope-line{
   margin:0;padding:0 12px 8px;font-size:var(--fs-aux);line-height:1.6;
-  color:#5A7A9E;display:flex;gap:6px;align-items:flex-start;
+  color:var(--xx-text);display:flex;gap:8px;align-items:flex-start;
 }
 .scope-line::before{
   content:"i";flex:none;width:16px;height:16px;margin-top:2px;border-radius:50%;
-  border:1px solid #9BBCDD;color:#7BA0C6;font-size:var(--fs-tag);font-style:italic;
+  border:1px solid var(--xx-muted);color:var(--xx-muted);font-size:var(--fs-tag);font-style:italic;
   display:flex;align-items:center;justify-content:center;
 }
 .stats-line{font-size:var(--fs-aux);color:var(--xx-muted);text-align:center;margin:12px 0 0;line-height:1.5}
@@ -221,7 +220,7 @@ button{cursor:pointer}
 }
 .group-toolbar select{
   border:1px solid var(--xx-border);border-radius:var(--r-ctrl);background:var(--surface);
-  height:32px;padding:0 6px;font-size:var(--fs-body);max-width:110px;
+  height:32px;padding:0 8px;font-size:var(--fs-body);max-width:110px;
 }
 .value-open{
   border:1px solid var(--xx-border);border-radius:var(--r-ctrl);background:var(--surface);
@@ -233,58 +232,58 @@ button{cursor:pointer}
 .table-wrap{margin:0 12px;background:var(--surface);border-radius:var(--r-card);overflow:hidden}
 table.cmp{width:100%;border-collapse:collapse;font-size:var(--fs-body);table-layout:fixed}
 table.cmp th{
-  font-size:var(--fs-tag);font-weight:500;color:var(--xx-muted);background:#FAFAFA;
-  padding:8px 6px;text-align:right;line-height:1.4;border-bottom:1px solid var(--xx-border);
+  font-size:var(--fs-tag);font-weight:500;color:var(--xx-muted);background:var(--xx-bg);
+  padding:8px;text-align:right;line-height:1.5;border-bottom:1px solid var(--xx-border);
 }
 table.cmp th:first-child{text-align:left;padding-left:12px}
 table.cmp td{
-  padding:13px 6px;text-align:right;border-bottom:1px solid var(--xx-border);
-  vertical-align:middle;line-height:1.4;
+  padding:12px 8px;text-align:right;border-bottom:1px solid var(--xx-border);
+  vertical-align:middle;line-height:1.5;
 }
 table.cmp td:first-child{text-align:left;padding-left:12px}
 table.cmp tr:last-child td{border-bottom:0}
-table.cmp tfoot td{background:#FAFAFA;font-weight:600;color:var(--xx-text)}
-.group-cell{display:flex;align-items:center;gap:6px}
-.group-cell .name{flex:1;min-width:0;font-size:var(--fs-body);line-height:1.4;word-break:break-all}
+table.cmp tfoot td{background:var(--xx-bg);font-weight:600;color:var(--xx-text)}
+.group-cell{display:flex;align-items:center;gap:8px}
+.group-cell .name{flex:1;min-width:0;font-size:var(--fs-body);line-height:1.5;word-break:break-all}
 .cell-sub{display:block;font-size:var(--fs-tag);color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary);font-weight:500}
 
 /* ---- 展开：一整块浅色区，细则用缩进 + 引导线从属，不用第二张表 ---- */
-tr.expanded>td{background:#F6F9FE;border-bottom:0}
+tr.expanded>td{background:var(--xx-primary-soft);border-bottom:0}
 tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .expanded-cell{
-  padding:0!important;background:#F6F9FE;
+  padding:0!important;background:var(--xx-primary-soft);
   border-bottom:1px solid var(--xx-border)!important;
 }
-.expanded-inner{position:relative;padding:4px 14px 4px 30px;text-align:left}
+.expanded-inner{position:relative;padding:4px 12px 4px 28px;text-align:left}
 .expanded-inner::before{
   content:"";position:absolute;left:15px;top:2px;bottom:14px;width:2px;
-  border-radius:1px;background:#CBDDF8;
+  border-radius:1px;background:var(--xx-border);
 }
 
 /* 表头 + 分列对齐，同时保持层级自上而下递减：表头 11px → 主行 15px → 从属行 13px */
 .dp-t .r{display:grid;grid-template-columns:1fr 50px 50px 58px;align-items:center}
-.dp-t .r>span{padding:9px 0;font-size:var(--fs-body);color:#4E5C6E;text-align:left}
-.dp-t .r>b{padding:9px 0;text-align:right;font-variant-numeric:tabular-nums}
+.dp-t .r>span{padding:8px 0;font-size:var(--fs-body);color:var(--xx-text);text-align:left}
+.dp-t .r>b{padding:8px 0;text-align:right;font-variant-numeric:tabular-nums}
 .dp-t .r>b{font-weight:600}
 .dp-t .r>b:nth-of-type(1){color:var(--xx-text)}
-.dp-t .r>b:nth-of-type(2),.dp-t .r>b:nth-of-type(3){color:#5A6472}
+.dp-t .r>b:nth-of-type(2),.dp-t .r>b:nth-of-type(3){color:var(--xx-muted)}
 .dp-t .r.head>span,.dp-t .r.head>b{
-  font-size:var(--fs-tag);font-weight:400;color:var(--xx-muted);padding:0 0 6px;
+  font-size:var(--fs-tag);font-weight:400;color:var(--xx-muted);padding:0 0 8px;
 }
 .dp-t .r:not(.head):not(.sub)>span,
-.dp-t .r:not(.head):not(.sub)>b{border-top:1px solid #E8EEF8}
+.dp-t .r:not(.head):not(.sub)>b{border-top:1px solid var(--xx-border)}
 .dp-t .r.sub>span{padding-left:16px;color:var(--xx-muted)}
-.dp-t .r.sub>b:nth-of-type(1){font-size:var(--fs-aux);font-weight:400;color:#5A6472}
+.dp-t .r.sub>b:nth-of-type(1){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
 .dp-t .r.sub>b:nth-of-type(2),.dp-t .r.sub>b:nth-of-type(3){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
 .rd-note{
-  font-size:var(--fs-tag);color:var(--xx-muted);margin:10px 0 0;
-  padding-top:8px;border-top:1px solid #E8EEF8;line-height:1.5;
+  font-size:var(--fs-tag);color:var(--xx-muted);margin:12px 0 0;
+  padding-top:8px;border-top:1px solid var(--xx-border);line-height:1.5;
 }
 
 .expanded-foot{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:10px 0 12px;margin-top:4px;border-top:1px solid #E8EEF8;
+  padding:12px 0;margin-top:4px;border-top:1px solid var(--xx-border);
 }
 .stats-note{font-size:var(--fs-tag);color:var(--xx-muted);margin:0;line-height:1.5}
 .expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:var(--fs-body);min-height:32px}
@@ -294,15 +293,15 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 }
 .load-more{display:flex;justify-content:center;padding:12px 0 4px}
 .load-more button{
-  border:1px solid var(--xx-border);background:var(--surface);border-radius:14px;
-  font-size:var(--fs-aux);height:32px;padding:0 14px;color:var(--xx-text);
+  border:1px solid var(--xx-border);background:var(--surface);border-radius:4px;
+  font-size:var(--fs-aux);height:32px;padding:0 12px;color:var(--xx-text);
 }
 .load-more[hidden]{display:none}
 .empty{
   margin:0 12px;background:var(--surface);border-radius:var(--r-card);
   padding:48px 16px;text-align:center;color:var(--xx-muted);font-size:var(--fs-body);
 }
-.empty small{display:block;font-size:var(--fs-aux);margin-top:6px}
+.empty small{display:block;font-size:var(--fs-aux);margin-top:8px}
 
 /* ---------- 课次明细 ---------- */
 .detail-total{
@@ -315,7 +314,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .lesson-class{font-size:var(--fs-body);margin:4px 0 0}
 .lesson-meta{font-size:var(--fs-aux);color:var(--xx-muted);line-height:1.5;margin:4px 0 0}
 .lesson-stat{
-  display:flex;align-items:center;justify-content:space-between;margin-top:10px;
+  display:flex;align-items:center;justify-content:space-between;margin-top:12px;
   font-size:var(--fs-aux);color:var(--xx-muted);
 }
 .lesson-stat b{color:var(--xx-text);font-size:var(--fs-body)}
@@ -327,7 +326,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .sheet-mask{position:absolute;inset:0;background:rgba(0,0,0,.45)}
 .sheet-panel{
   position:absolute;left:0;right:0;bottom:0;max-height:84%;background:var(--surface);
-  border-radius:12px 12px 0 0;display:flex;flex-direction:column;
+  border-radius:var(--r-card) var(--r-card) 0 0;display:flex;flex-direction:column;
 }
 .sheet-head{
   flex:none;display:flex;align-items:center;justify-content:space-between;
@@ -352,14 +351,14 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .date-fields{display:grid;gap:12px}
 .date-fields label{display:block;font-size:var(--fs-aux);color:var(--xx-muted);line-height:1.5}
 .date-fields input{
-  display:block;width:100%;height:44px;margin-top:6px;border:1px solid var(--xx-border);
+  display:block;width:100%;height:44px;margin-top:8px;border:1px solid var(--xx-border);
   border-radius:var(--r-ctrl);padding:0 12px;background:var(--surface);font-size:var(--fs-body);
 }
 .filter-group+.filter-group{margin-top:20px;padding-top:16px;border-top:1px solid var(--xx-border)}
-.filter-group h4{margin:0 0 10px;font-size:var(--fs-body);font-weight:600}
+.filter-group h4{margin:0 0 12px;font-size:var(--fs-body);font-weight:600}
 .check-list{display:grid;gap:4px}
 .check{
-  display:flex;align-items:center;gap:10px;min-height:44px;font-size:var(--fs-body);
+  display:flex;align-items:center;gap:12px;min-height:44px;font-size:var(--fs-body);
   border:0;background:none;padding:0;text-align:left;width:100%;
 }
 .check i{
@@ -377,7 +376,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
 .toast{
   position:absolute;left:50%;bottom:96px;transform:translateX(-50%);z-index:80;
   background:rgba(0,0,0,.82);color:#fff;font-size:var(--fs-body);line-height:1.5;
-  padding:10px 16px;border-radius:var(--r-ctrl);max-width:80%;text-align:center;
+  padding:12px 16px;border-radius:var(--r-ctrl);max-width:80%;text-align:center;
 }
 .toast[hidden]{display:none}
 </style>
@@ -884,7 +883,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary);font-weight:500}
         </button>
         <div class="lesson-body" hidden>
           ${groupTable(t, false)}
-          <p class="stats-note" style="padding:10px 0 0">试听 ${t.trial} 人次不计入</p>
+          <p class="stats-note" style="padding:8px 0 0">试听 ${t.trial} 人次不计入</p>
         </div>
       </div>`;
     }).join('') + (state.detailLimit < state.detail.length
