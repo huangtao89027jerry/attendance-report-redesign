@@ -245,19 +245,12 @@ table.cmp tr:last-child td{border-bottom:0}
 table.cmp tfoot td{background:var(--xx-bg);color:var(--xx-text)}
 .group-cell{display:flex;align-items:center;gap:8px}
 .group-cell .name{flex:1;min-width:0;font-size:var(--fs-body);line-height:1.5;word-break:break-all}
+tr.row-link{cursor:pointer}
+tr.row-link:active td{background:var(--xx-primary-soft)}
 .cell-sub{display:block;font-size:var(--fs-tag);color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary)}
 
-/* ---- 展开：一整块浅色区，细则用缩进 + 引导线从属，不用第二张表 ---- */
-tr.expanded>td{background:var(--xx-primary-soft);border-bottom:0}
-tr.expanded .group-cell .name{color:var(--xx-primary)}
-.expanded-cell{
-  padding:0!important;background:var(--xx-primary-soft);
-  border-bottom:1px solid var(--xx-border)!important;
-}
-.expanded-inner{position:relative;padding:8px 12px 4px;text-align:left}
-
-/* 表头 + 分列对齐；块内不画任何线，靠留白与字色分层 */
+/* 分组明细表：表头 + 分列对齐；块内不画线，靠留白与字色分层 */
 .dp-t .r{display:grid;grid-template-columns:1fr 50px 50px 58px;align-items:center}
 .dp-t .r>span{padding:12px 0;font-size:var(--fs-body);color:var(--xx-text);text-align:left}
 .dp-t .r>b{padding:12px 0;text-align:right;font-variant-numeric:tabular-nums}
@@ -274,12 +267,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
   font-size:var(--fs-tag);color:var(--xx-muted);margin:12px 0 0;line-height:1.5;
 }
 
-.expanded-foot{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:12px 0;margin-top:4px;border-top:1px solid var(--xx-border);
-}
 .stats-note{font-size:var(--fs-tag);color:var(--xx-muted);margin:0;line-height:1.5}
-.expanded-foot .link-row{width:auto;justify-content:flex-end;font-size:var(--fs-body);min-height:32px}
 .link-row{
   width:100%;border:0;background:none;min-height:44px;font-size:var(--fs-body);
   color:var(--xx-primary);display:flex;align-items:center;justify-content:center;gap:4px;
@@ -468,6 +456,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
         <h1>课次明细</h1>
         <span class="nav-side"></span>
       </div>
+      <div id="detailSummary"></div>
       <div class="detail-total"><span id="detailTitle">课次明细</span><span id="detailTotal"></span></div>
       <div id="lessonList"></div>
     </section>
@@ -662,7 +651,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
     dimension: '班级名称', values: null,
     period: '最近30天', start: range('最近30天')[0], end: TODAY,
     filters: { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true },
-    limit: 6, expanded: null, groups: [], visible: [],
+    limit: 6, groups: [], visible: [],
     detail: [], detailTitle: '', detailLimit: 6, reportScroll: 0
   };
   const DEFAULTS = { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true };
@@ -783,20 +772,13 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
       </tr></thead>`;
 
     const rows = state.visible.map(g => {
-      const open = state.expanded === g.name;
       const noPeople = g.t.people === 0;
-      return `<tr class="${open ? 'expanded' : ''}" data-group="${esc(g.name)}">
-        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic${open ? ' open' : ''}"></span></span></td>
+      return `<tr class="row-link" data-group="${esc(g.name)}">
+        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic" data-ic="right"></span></span></td>
         <td>${g.t.lessons}次<span class="cell-sub">${g.t.people}人次</span></td>
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
-      </tr>${open ? `<tr><td class="expanded-cell" colspan="4"><div class="expanded-inner">
-          ${groupTable(g.t)}
-          <div class="expanded-foot">
-            <span class="stats-note">${noPeople ? '该分组当前全部学员未计入统计范围' : ''}</span>
-            <button class="link-row" data-detail="${esc(g.name)}">查看课次明细<span class="ic" data-ic="right"></span></button>
-          </div>
-        </div></td></tr>` : ''}`;
+      </tr>`;
     }).join('');
 
     const foot = `<tfoot><tr>
@@ -848,15 +830,22 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
   const NAMES = { trial: '试听', join: '临加', adjust: '临调', makeup: '补课' };
 
   /* ---------------- 渲染：课次明细 ---------------- */
-  function openDetail(list, title) {
+  function openDetail(list, title, summary) {
     state.detail = list.slice().sort((a, b) => b.date.localeCompare(a.date));
     state.detailTitle = title;
+    state.detailSummary = summary || null;
     state.detailLimit = PAGE_SIZE;
     renderDetail();
     showPage('detail');
   }
   function renderDetail() {
-    $('#detailTitle').textContent = state.detailTitle;
+    $('#detailSummary').innerHTML = state.detailSummary
+      ? `<div class="card">
+          <h2 class="sec-title">${esc(state.detailTitle)}</h2>
+          ${groupTable(state.detailSummary)}
+        </div>`
+      : '';
+    $('#detailTitle').textContent = state.detailSummary ? '课次明细' : state.detailTitle;
     $('#detailTotal').textContent = '共 ' + state.detail.length + ' 条数据';
     $('#lessonList').innerHTML = state.detail.slice(0, state.detailLimit).map((l, i) => {
       const t = stats([l]);
@@ -981,7 +970,6 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
     [state.start, state.end] = range('最近30天');
     state.filters = { ...DEFAULTS };
     state.limit = PAGE_SIZE;
-    state.expanded = null;
   }
 
   /* ---------------- 弹层 ---------------- */
@@ -1032,7 +1020,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
     state.start = s; state.end = e;
     state.period = dateDraft.period === '自定义' ? s.slice(5).replace('-', '/') + '–' + e.slice(5).replace('-', '/') + '（' + s.slice(0, 4) + '）' : dateDraft.period;
     closeSheet('sheetDate');
-    state.limit = PAGE_SIZE; state.expanded = null;
+    state.limit = PAGE_SIZE;
     renderReport();
   });
 
@@ -1070,7 +1058,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
   $('#filterApply').addEventListener('click', () => {
     state.filters = { ...draft };
     closeSheet('sheetFilter');
-    state.limit = PAGE_SIZE; state.expanded = null;
+    state.limit = PAGE_SIZE;
     renderReport();
   });
 
@@ -1112,7 +1100,7 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
     if (valueDraft !== null && !valueDraft.length) { $('#valueError').hidden = false; return; }
     state.values = valueDraft === null ? null : valueDraft.slice();
     closeSheet('sheetValue');
-    state.limit = PAGE_SIZE; state.expanded = null;
+    state.limit = PAGE_SIZE;
     renderReport();
   });
 
@@ -1121,22 +1109,16 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
   $('#dimSelect').addEventListener('change', e => {
     state.dimension = e.target.value;
     state.values = null;
-    state.limit = PAGE_SIZE; state.expanded = null;
+    state.limit = PAGE_SIZE;
     renderReport();
   });
   $('#tableWrap').addEventListener('click', e => {
-    const d = e.target.closest('[data-detail]');
-    if (d) {
-      const g = state.groups.find(x => x.name === d.dataset.detail);
-      state.reportScroll = scroller.scrollTop;
-      openDetail(g.list, g.name + ' · 课次明细');
-      return;
-    }
     const row = e.target.closest('tr[data-group]');
     if (!row) return;
-    const name = row.dataset.group;
-    state.expanded = state.expanded === name ? null : name;
-    renderReport();
+    const g = state.groups.find(x => x.name === row.dataset.group);
+    if (!g) return;
+    state.reportScroll = scroller.scrollTop;
+    openDetail(g.list, g.name, g.t);
   });
   $('#chips').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
