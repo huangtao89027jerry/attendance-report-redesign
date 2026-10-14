@@ -26,6 +26,10 @@
   --fs-tag:11px;
   /* 数据展示用的大数字，规范未覆盖，单列一档 */
   --fs-display:26px;
+  /* 本页统一列栅格：列表、展开明细、课次明细共用同一组列线 */
+  --col-1:46%;
+  --col-2:27%;
+  --col-3:27%;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -238,6 +242,10 @@ table.cmp tr:last-child td{border-bottom:0}
 table.cmp tfoot td{background:var(--xx-bg);color:var(--xx-text)}
 .group-cell{display:flex;align-items:center;gap:8px}
 .group-cell .name{flex:1;min-width:0;font-size:var(--fs-body);line-height:1.5;word-break:break-all}
+.group-cell .name em{
+  display:block;font-style:normal;font-size:var(--fs-tag);
+  color:var(--xx-muted);line-height:1.5;margin-top:2px;
+}
 tr.row-link{cursor:pointer}
 tr.row-link:active td{background:var(--xx-primary-soft)}
 .cell-sub{display:block;font-size:var(--fs-tag);color:var(--xx-muted)}
@@ -249,31 +257,35 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
    内层统计表与外层列表共用同一套列宽（34 / 22 / 22 / 22）。 */
 .summary-row.expanded>td{background:var(--xx-primary-soft)}
 .summary-row.expanded .group-cell .name{color:var(--xx-primary)}
-.expanded-row>td{padding:8px 12px 12px!important;background:var(--xx-primary-soft)}
-/* 展开的卡片要"浮"在选中行之上：加投影、字号不低于列表、关键值加重 */
+/* 展开卡：左右不留内边距，让卡内表格与外层列表同宽同内边距 → 一套列线 */
+.expanded-row>td{padding:8px 0 12px!important;background:var(--xx-primary-soft)}
 .row-statistics{
-  padding:12px;background:var(--surface);border-radius:var(--r-card);
+  padding:12px 0 0;background:var(--surface);border-radius:var(--r-card);
   box-shadow:0 8px 20px rgba(22,119,255,.10);
 }
 /* 卡片标题行：班级名 + 试听（沿用原型的字段） */
 .inline-title{
   display:flex;justify-content:space-between;gap:8px;align-items:baseline;
-  margin-bottom:4px;
+  margin:0 12px 4px;
 }
 .inline-title strong{font-size:var(--fs-body);font-weight:500;color:var(--xx-text)}
 .inline-title span{font-size:var(--fs-aux);color:var(--xx-muted)}
 .stats-table{font-variant-numeric:tabular-nums}
 .stats-row{
-  display:grid;grid-template-columns:1fr 25% 25%;align-items:center;
-  min-height:36px;padding:0 8px;
+  display:grid;grid-template-columns:var(--col-1) var(--col-2) var(--col-3);align-items:center;
+  min-height:36px;
 }
-.stats-row>span{font-size:var(--fs-body);color:var(--xx-text);text-align:right;white-space:nowrap}
-.stats-row>span:first-child{text-align:left}
+/* 单元格内边距与外层表格逐项对齐（首列 12px，其余 8px），列线才真正贯通 */
+.stats-row>span{
+  font-size:var(--fs-body);color:var(--xx-text);
+  text-align:right;white-space:nowrap;padding:0 8px;
+}
+.stats-row>span:first-child{text-align:left;padding-left:12px}
 .stats-head{min-height:28px}
 .stats-head>span{font-size:var(--fs-aux);font-weight:500;color:var(--xx-muted)}
 .lesson-link{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  width:100%;min-height:40px;margin-top:8px;padding:0 12px;border:0;
+  width:calc(100% - 24px);min-height:40px;margin:8px 12px 12px;padding:0 8px;border:0;
   border-radius:var(--r-ctrl);background:var(--xx-primary-soft);
   color:var(--xx-primary);font-size:var(--fs-body);
 }
@@ -763,21 +775,22 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
 
     const multi = MULTI_VALUE_DIMS.includes(state.dimension);
     const head = `<thead><tr>
-        <th style="width:34%">${esc(state.dimension)}${multi ? '<br><span style="font-weight:400">同一课次可计入多个标签</span>' : ''}</th>
-        <th style="width:22%">上课次数<br>人次数</th>
-        <th style="width:22%">出勤率</th>
-        <th style="width:22%">补课后<br>出勤率</th>
+        <th style="width:var(--col-1)">${esc(state.dimension)}</th>
+        <th style="width:var(--col-2)">出勤率</th>
+        <th style="width:var(--col-3)">补课后出勤率</th>
       </tr></thead>`;
 
     const rows = state.visible.map(g => {
       const open = state.expanded === g.name;
       const noPeople = g.t.people === 0;
       return `<tr class="summary-row${open ? ' expanded' : ''}" data-group="${esc(g.name)}">
-        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic${open ? ' open' : ''}"></span></span></td>
-        <td>${g.t.lessons}次<span class="cell-sub">${g.t.people}人次</span></td>
+        <td><span class="group-cell">
+          <span class="name">${esc(g.name)}<em>${g.t.lessons}次 · ${g.t.people}人次</em></span>
+          <span class="ic${open ? ' open' : ''}"></span>
+        </span></td>
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
-      </tr>${open ? `<tr class="expanded-row"><td colspan="4">
+      </tr>${open ? `<tr class="expanded-row"><td colspan="3">
           <div class="row-statistics">
             <div class="inline-title"><strong>${esc(g.name)}</strong><span>试听 ${g.t.trial}</span></div>
             ${groupTable(g.t)}
