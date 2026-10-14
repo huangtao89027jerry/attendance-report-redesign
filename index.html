@@ -250,21 +250,36 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
 .cell-sub{display:block;font-size:var(--fs-tag);color:var(--xx-muted)}
 .rate-cell{color:var(--xx-primary)}
 
-/* 分组明细表：表头 + 分列对齐；块内不画线，靠留白与字色分层 */
-.dp-t .r{display:grid;grid-template-columns:1fr 50px 50px 58px;align-items:center}
-.dp-t .r>span{padding:12px 0;font-size:var(--fs-body);color:var(--xx-text);text-align:left}
-.dp-t .r>b{padding:12px 0;text-align:right;font-variant-numeric:tabular-nums}
-.dp-t .r>b{font-weight:400}
-.dp-t .r>b:nth-of-type(1){color:var(--xx-text)}
-.dp-t .r>b:nth-of-type(2),.dp-t .r>b:nth-of-type(3){color:var(--xx-muted)}
-.dp-t .r.head>span,.dp-t .r.head>b{
-  font-size:var(--fs-tag);font-weight:400;color:var(--xx-muted);padding:0 0 4px;
+/* ---- 分组展开：选中行浅蓝底 + 白色卡片（标题 / 统计表 / 补课后行 / 明细入口） ---- */
+.summary-row.expanded>td{background:var(--xx-primary-soft)}
+.expanded-row>td{padding:0 12px 12px!important;background:var(--xx-primary-soft)}
+.row-statistics{padding:12px;background:var(--surface);border-radius:var(--r-card)}
+.inline-title{
+  display:flex;justify-content:space-between;gap:8px;align-items:baseline;
+  font-size:var(--fs-tag);color:var(--xx-muted);margin-bottom:8px;
 }
-.dp-t .r.sub>span{padding-left:28px;color:var(--xx-muted)}
-.dp-t .r.sub>b:nth-of-type(1){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
-.dp-t .r.sub>b:nth-of-type(2),.dp-t .r.sub>b:nth-of-type(3){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
-.rd-note{
-  font-size:var(--fs-tag);color:var(--xx-muted);margin:12px 0 0;line-height:1.5;
+.inline-title strong{font-size:var(--fs-aux);font-weight:500;color:var(--xx-text)}
+.stats-table{font-variant-numeric:tabular-nums}
+.stats-row{
+  display:grid;grid-template-columns:29% 23% 21% 27%;align-items:center;
+  min-height:32px;padding:0 8px;
+}
+.stats-row>span{font-size:var(--fs-aux);color:var(--xx-text);text-align:right;white-space:nowrap}
+.stats-row>span:first-child{text-align:left}
+.stats-row>span.rate{color:var(--xx-primary)}
+.stats-head{min-height:32px;background:var(--xx-bg);border-radius:var(--r-ctrl);margin:0 0 4px}
+.stats-head>span{font-size:var(--fs-tag);color:var(--xx-muted)}
+.after{
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:32px;margin-top:4px;padding:0 8px;border-radius:var(--r-ctrl);
+  background:var(--xx-bg);font-size:var(--fs-aux);color:var(--xx-muted);
+}
+.after strong{font-size:var(--fs-body);font-weight:400;color:var(--xx-primary);font-variant-numeric:tabular-nums}
+.lesson-link{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  width:100%;min-height:40px;margin-top:8px;padding:0 12px;border:0;
+  border-radius:var(--r-ctrl);background:var(--xx-primary-soft);
+  color:var(--xx-primary);font-size:var(--fs-body);
 }
 
 .stats-note{font-size:var(--fs-tag);color:var(--xx-muted);margin:0;line-height:1.5}
@@ -651,7 +666,7 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
     dimension: '班级名称', values: null,
     period: '最近30天', start: range('最近30天')[0], end: TODAY,
     filters: { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true },
-    limit: 6, groups: [], visible: [],
+    limit: 6, expanded: null, groups: [], visible: [],
     detail: [], detailTitle: '', detailLimit: 6, reportScroll: 0
   };
   const DEFAULTS = { trial: false, join: true, adjust: true, makeup: true, main: true, assistant: true };
@@ -702,17 +717,17 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
   const dimKey = dim => ({ '班级名称': 'n', '课程名称': 'course', '班级标签': 'tags', '上课校区': 'campus', '年份': 'year', '期段': 'term', '年级': 'grade', '科目': 'subject', '类型': 'type', '班型': 'band' }[dim]);
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
-  // 明细：表头定列 → 主行（大）→ 从属行（小）→ 口径注脚，自上而下依次减弱
-  function groupTable(t, withScope = true) {
-    const row = (label, total, cost, free, cls = '') =>
-      `<div class="r ${cls}"><span>${label}</span><b>${total}</b><b>${cost}</b><b>${free}</b></div>`;
-    return `<div class="dp-t">
-        <div class="r head"><span></span><b>人次</b><b>计费</b><b>未计费</b></div>
-        ${row('出勤', t.att + t.attFree, t.att, t.attFree)}
-        ${row('缺勤', t.abs + t.absFree, t.abs, t.absFree)}
-        ${row('其中已补', t.make + t.makeFree, t.make, t.makeFree, 'sub')}
+  // 统计表：灰底表头 + 三行数据 + 灰底的补课后出勤率行（与原型一致）
+  function groupTable(t) {
+    const row = (label, cost, free, rate, hot) =>
+      `<div class="stats-row"><span>${label}</span><span>${cost}</span><span>${free}</span><span${hot ? ' class="rate"' : ''}>${rate}</span></div>`;
+    return `<div class="stats-table">
+        <div class="stats-row stats-head"><span>统计项</span><span>计费</span><span>未计费</span><span>比率</span></div>
+        ${row('出勤', t.att, t.attFree, t.attRate, true)}
+        ${row('缺勤', t.abs, t.absFree, rate(t.absPeople, t.people))}
+        ${row('缺勤已补', t.make, t.makeFree, '—')}
       </div>
-      ${withScope ? `<p class="rd-note">应到 ${t.people} 人次 · 试听 ${t.trial} 人次不计入</p>` : ''}`;
+      <div class="after"><span>补课后出勤率</span><strong>${t.makeRate}</strong></div>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
@@ -772,13 +787,20 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
       </tr></thead>`;
 
     const rows = state.visible.map(g => {
+      const open = state.expanded === g.name;
       const noPeople = g.t.people === 0;
-      return `<tr class="row-link" data-group="${esc(g.name)}">
-        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic" data-ic="right"></span></span></td>
+      return `<tr class="summary-row${open ? ' expanded' : ''}" data-group="${esc(g.name)}">
+        <td><span class="group-cell"><span class="name">${esc(g.name)}</span><span class="ic${open ? ' open' : ''}"></span></span></td>
         <td>${g.t.lessons}次<span class="cell-sub">${g.t.people}人次</span></td>
         <td class="rate-cell">${noPeople ? '<span class="tag tag-muted">未计入</span>' : g.t.attRate}</td>
         <td>${g.t.makeRate}</td>
-      </tr>`;
+      </tr>${open ? `<tr class="expanded-row"><td colspan="4">
+          <div class="row-statistics">
+            <div class="inline-title"><strong>${esc(g.name)}</strong><span>试听 ${g.t.trial}</span></div>
+            ${groupTable(g.t)}
+            <button class="lesson-link" data-detail="${esc(g.name)}"><span>查看课次明细</span><span class="ic" data-ic="right"></span></button>
+          </div>
+        </td></tr>` : ''}`;
     }).join('');
 
     const foot = `<tfoot><tr>
@@ -858,15 +880,11 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
           <div class="lesson-meta">${esc(teachers)}</div>
           <div class="lesson-stat">
             <span>实到/应到 <b>${t.att + t.attFree}/${t.people}</b></span>
-            <span>出勤率 <b class="rate-cell">${t.attRate}</b></span>
-            <span>补课后 <b class="rate-cell">${t.makeRate}</b></span>
+            <span>试听 <b>${t.trial}</b></span>
             <span class="ic"></span>
           </div>
         </button>
-        <div class="lesson-body" hidden>
-          ${groupTable(t, false)}
-          <p class="stats-note" style="padding:8px 0 0">试听 ${t.trial} 人次不计入</p>
-        </div>
+        <div class="lesson-body" hidden>${groupTable(t)}</div>
       </div>`;
     }).join('') + (state.detailLimit < state.detail.length
       ? `<div class="load-more"><button id="detailMore">加载更多（还有 ${state.detail.length - state.detailLimit} 条）</button></div>` : '');
@@ -1113,12 +1131,18 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
     renderReport();
   });
   $('#tableWrap').addEventListener('click', e => {
+    const d = e.target.closest('[data-detail]');
+    if (d) {
+      const g = state.groups.find(x => x.name === d.dataset.detail);
+      state.reportScroll = scroller.scrollTop;
+      openDetail(g.list, g.name);
+      return;
+    }
     const row = e.target.closest('tr[data-group]');
     if (!row) return;
-    const g = state.groups.find(x => x.name === row.dataset.group);
-    if (!g) return;
-    state.reportScroll = scroller.scrollTop;
-    openDetail(g.list, g.name, g.t);
+    const name = row.dataset.group;
+    state.expanded = state.expanded === name ? null : name;
+    renderReport();
   });
   $('#chips').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
