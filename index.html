@@ -255,8 +255,13 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
    层与层之间靠 字号 / 字色 / 一条 1px 分隔线 区分，不再叠灰色底条。
    内层统计表与外层列表共用同一套列宽（34 / 22 / 22 / 22）。 */
 .summary-row.expanded>td{background:var(--xx-primary-soft)}
-.expanded-row>td{padding:0 12px 12px!important;background:var(--xx-primary-soft)}
-.row-statistics{padding:12px;background:var(--surface);border-radius:var(--r-card)}
+.summary-row.expanded .group-cell .name{color:var(--xx-primary)}
+.expanded-row>td{padding:8px 12px 12px!important;background:var(--xx-primary-soft)}
+/* 展开的卡片要"浮"在选中行之上：加投影、字号不低于列表、关键值加重 */
+.row-statistics{
+  padding:12px;background:var(--surface);border-radius:var(--r-card);
+  box-shadow:0 8px 20px rgba(22,119,255,.10);
+}
 /* 卡片顶部不放班级名（上面那行已经写了），改放统计口径 */
 .row-statistics .scope-line{margin:0 0 4px;padding:0;font-size:var(--fs-tag);color:var(--xx-muted);display:block}
 .stats-table{font-variant-numeric:tabular-nums}
@@ -264,18 +269,18 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
   display:grid;grid-template-columns:34% 22% 22% 22%;align-items:center;
   min-height:36px;padding:0 8px;
 }
-.stats-row>span{font-size:var(--fs-aux);color:var(--xx-text);text-align:right;white-space:nowrap}
+.stats-row>span{font-size:var(--fs-body);color:var(--xx-text);text-align:right;white-space:nowrap}
 .stats-row>span:first-child{text-align:left}
 .stats-row>span.rate{color:var(--xx-primary)}
 .stats-head{min-height:28px}
-.stats-head>span{font-size:var(--fs-tag);font-weight:500;color:var(--xx-muted)}
+.stats-head>span{font-size:var(--fs-aux);font-weight:500;color:var(--xx-muted)}
 .after{
   display:flex;align-items:center;justify-content:space-between;
   min-height:36px;margin-top:4px;padding:0 8px;
   border-top:1px solid var(--xx-border);
-  font-size:var(--fs-aux);color:var(--xx-muted);
+  font-size:var(--fs-body);color:var(--xx-muted);
 }
-.after strong{font-size:var(--fs-body);font-weight:400;color:var(--xx-primary);font-variant-numeric:tabular-nums}
+.after strong{font-size:var(--fs-section);font-weight:600;color:var(--xx-primary);font-variant-numeric:tabular-nums;line-height:1.4}
 .lesson-link{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   width:100%;min-height:40px;margin-top:8px;padding:0 12px;border:0;
