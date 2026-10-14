@@ -255,30 +255,23 @@ tr.expanded .group-cell .name{color:var(--xx-primary)}
   padding:0!important;background:var(--xx-primary-soft);
   border-bottom:1px solid var(--xx-border)!important;
 }
-.expanded-inner{position:relative;padding:4px 12px 4px 28px;text-align:left}
-.expanded-inner::before{
-  content:"";position:absolute;left:15px;top:2px;bottom:14px;width:2px;
-  border-radius:1px;background:var(--xx-border);
-}
+.expanded-inner{position:relative;padding:8px 12px 4px;text-align:left}
 
-/* 表头 + 分列对齐，同时保持层级自上而下递减：表头 11px → 主行 15px → 从属行 13px */
+/* 表头 + 分列对齐；块内不画任何线，靠留白与字色分层 */
 .dp-t .r{display:grid;grid-template-columns:1fr 50px 50px 58px;align-items:center}
-.dp-t .r>span{padding:8px 0;font-size:var(--fs-body);color:var(--xx-text);text-align:left}
-.dp-t .r>b{padding:8px 0;text-align:right;font-variant-numeric:tabular-nums}
+.dp-t .r>span{padding:12px 0;font-size:var(--fs-body);color:var(--xx-text);text-align:left}
+.dp-t .r>b{padding:12px 0;text-align:right;font-variant-numeric:tabular-nums}
 .dp-t .r>b{font-weight:400}
 .dp-t .r>b:nth-of-type(1){color:var(--xx-text)}
 .dp-t .r>b:nth-of-type(2),.dp-t .r>b:nth-of-type(3){color:var(--xx-muted)}
 .dp-t .r.head>span,.dp-t .r.head>b{
-  font-size:var(--fs-tag);font-weight:400;color:var(--xx-muted);padding:0 0 8px;
+  font-size:var(--fs-tag);font-weight:400;color:var(--xx-muted);padding:0 0 4px;
 }
-.dp-t .r:not(.head):not(.sub)>span,
-.dp-t .r:not(.head):not(.sub)>b{border-top:1px solid var(--xx-border)}
 .dp-t .r.sub>span{padding-left:16px;color:var(--xx-muted)}
 .dp-t .r.sub>b:nth-of-type(1){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
 .dp-t .r.sub>b:nth-of-type(2),.dp-t .r.sub>b:nth-of-type(3){font-size:var(--fs-aux);font-weight:400;color:var(--xx-muted)}
 .rd-note{
-  font-size:var(--fs-tag);color:var(--xx-muted);margin:12px 0 0;
-  padding-top:8px;border-top:1px solid var(--xx-border);line-height:1.5;
+  font-size:var(--fs-tag);color:var(--xx-muted);margin:12px 0 0;line-height:1.5;
 }
 
 .expanded-foot{
