@@ -264,21 +264,13 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
 .inline-title span{font-size:var(--fs-aux);color:var(--xx-muted)}
 .stats-table{font-variant-numeric:tabular-nums}
 .stats-row{
-  display:grid;grid-template-columns:34% 22% 22% 22%;align-items:center;
+  display:grid;grid-template-columns:1fr 25% 25%;align-items:center;
   min-height:36px;padding:0 8px;
 }
 .stats-row>span{font-size:var(--fs-body);color:var(--xx-text);text-align:right;white-space:nowrap}
 .stats-row>span:first-child{text-align:left}
-.stats-row>span.rate{color:var(--xx-primary)}
 .stats-head{min-height:28px}
 .stats-head>span{font-size:var(--fs-aux);font-weight:500;color:var(--xx-muted)}
-.after{
-  display:flex;align-items:center;justify-content:space-between;
-  min-height:36px;margin-top:4px;padding:0 8px;
-  border-top:1px solid var(--xx-border);
-  font-size:var(--fs-body);color:var(--xx-muted);
-}
-.after strong{font-size:var(--fs-section);font-weight:600;color:var(--xx-primary);font-variant-numeric:tabular-nums;line-height:1.4}
 .lesson-link{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   width:100%;min-height:40px;margin-top:8px;padding:0 12px;border:0;
@@ -717,17 +709,16 @@ tr.row-link:active td{background:var(--xx-primary-soft)}
   const dimKey = dim => ({ '班级名称': 'n', '课程名称': 'course', '班级标签': 'tags', '上课校区': 'campus', '年份': 'year', '期段': 'term', '年级': 'grade', '科目': 'subject', '类型': 'type', '班型': 'band' }[dim]);
   CLASSES.forEach(c => { c.year = c.grade ? TODAY.slice(0, 4) + '年' : null; c.term = c.grade ? (c.people % 2 ? '秋季' : '春季') : null; });
 
-  // 统计表：灰底表头 + 三行数据 + 灰底的补课后出勤率行（与原型一致）
+  // 统计表：只保留"计费 / 未计费"两列 —— 出勤率与补课后出勤率上一行已有，不重复
   function groupTable(t) {
-    const row = (label, cost, free, rate, hot) =>
-      `<div class="stats-row"><span>${label}</span><span>${cost}</span><span>${free}</span><span${hot ? ' class="rate"' : ''}>${rate}</span></div>`;
+    const row = (label, cost, free) =>
+      `<div class="stats-row"><span>${label}</span><span>${cost}</span><span>${free}</span></div>`;
     return `<div class="stats-table">
-        <div class="stats-row stats-head"><span>统计项</span><span>计费</span><span>未计费</span><span>比率</span></div>
-        ${row('出勤', t.att, t.attFree, t.attRate, true)}
-        ${row('缺勤', t.abs, t.absFree, rate(t.absPeople, t.people))}
-        ${row('缺勤已补', t.make, t.makeFree, '—')}
-      </div>
-      <div class="after"><span>补课后出勤率</span><strong>${t.makeRate}</strong></div>`;
+        <div class="stats-row stats-head"><span>统计项</span><span>计费</span><span>未计费</span></div>
+        ${row('出勤', t.att, t.attFree)}
+        ${row('缺勤', t.abs, t.absFree)}
+        ${row('缺勤已补', t.make, t.makeFree)}
+      </div>`;
   }
 
   /* ---------------- 渲染：报表 ---------------- */
